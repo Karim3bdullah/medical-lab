@@ -1,0 +1,36 @@
+@import "tailwindcss";
+
+@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;600&family=Montserrat:wght@400;600&display=swap');
+
+@theme {
+
+  --color-primary: #0f1729;
+  --color-accent: #2563eb;
+  --color-medical-blue: #3b82f6;
+  --color-background-light: #f6f7f8;
+  --color-background-dark: #14171e;
+  
+ 
+  --font-tajawal: "Tajawal", sans-serif;
+  --font-montserrat: "Montserrat", sans-serif;
+}
+
+body {
+  direction: rtl;
+  font-family: var(--font-tajawal);
+  background-color: var(--color-background-light);
+}
+@media print {
+  body, html {
+    background-color: white !important;
+    height: auto !important;
+    overflow: visible !important;
+    /* السطرين دول عشان يطبع الألوان والخلفيات بتاعة الكروت والجدول صح */
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  @page {
+    size: A4;
+    margin: 15mm; /* هوامش الورقة */
+  }
+}

@@ -1,99 +1,129 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useLab } from '../context/LabContext';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();
+  const { settings } = useLab();
+
+  // مصفوفة الحسابات الافتراضية (الثابتة)
+  const defaultUsers = [
+    { id: 'ST-001', email: 'admin@lab.com', password: '123', role: 'Admin', name: 'د. المدير العام', salary: 0, isBanned: false },
+    { id: 'ST-002', email: 'staff@lab.com', password: '123', role: 'Receptionist', name: 'أخصائي الاستقبال', salary: 5000, isBanned: false },
+    { id: 'PT-1001', email: '01011111111', password: '123', role: 'Patient', name: 'أحمد محمد علي', patientId: 'PT-1001', isBanned: false }
+  ];
 
   const handleLogin = (e) => {
     e.preventDefault();
     
-    // داتا مانوال للأدمن (Mock Data)
-    if (email === 'admin@medlab.com' && password === '123456') {
-      // حفظ حالة تسجيل الدخول ودور المستخدم في المتصفح
+    // جلب المستخدمين المسجلين يدوياً من المخزن
+    const savedUsers = JSON.parse(localStorage.getItem('medlab_users')) || [];
+    
+    // دمج الحسابات الافتراضية مع المحفوظة لضمان وجود مريض التيست
+    const allUsers = [...defaultUsers, ...savedUsers];
+    
+    // البحث عن المستخدم مع تنظيف المدخلات (trim)
+    const user = allUsers.find(u => 
+      String(u.email).trim() === String(email).trim() && 
+      String(u.password).trim() === String(password).trim()
+    );
+
+    if (user) {
+      if (user.isBanned) {
+        setError('عفواً، هذا الحساب محظور إدارياً!');
+        return;
+      }
+
+      // حفظ بيانات الجلسة في المتصفح
       localStorage.setItem('isAuthenticated', 'true');
-      localStorage.setItem('userRole', 'Admin');
-      localStorage.setItem('userName', 'د. أدريان ميلر');
+      localStorage.setItem('userRole', user.role);
+      localStorage.setItem('userName', user.name);
       
-      // توجيه المستخدم للوحة التحكم
-      navigate('/');
+      if (user.patientId) {
+        localStorage.setItem('patientId', user.patientId);
+      }
+
+      // التوجيه للمكان المناسب
+      if (user.role === 'Patient') {
+        navigate('/portal');
+      } else {
+        navigate('/');
+      }
     } else {
       setError('البريد الإلكتروني أو كلمة المرور غير صحيحة!');
     }
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-cairo" dir="rtl">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="flex justify-center">
-          <div className="w-16 h-16 bg-primary rounded-xl flex items-center justify-center text-white shadow-xl">
-            <span className="material-symbols-outlined text-4xl">biotech</span>
-          </div>
+    <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-12 px-4 font-sans" dir="rtl">
+      <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
+        <div className="inline-flex items-center justify-center w-20 h-20 bg-primary rounded-[2rem] shadow-2xl text-white mb-6">
+          <span className="material-symbols-outlined text-5xl">biotech</span>
         </div>
-        <h2 className="mt-6 text-center text-3xl font-extrabold text-primary">
-          ميديكال ترست
+        <h2 className="text-3xl font-black text-slate-900 tracking-tighter italic">
+          {settings.labNameAr}
         </h2>
-        <p className="mt-2 text-center text-sm text-slate-500">
-          نظام إدارة المعلومات المختبرية الذكي
-        </p>
+        <p className="mt-2 text-sm text-slate-400 font-bold uppercase tracking-widest">Laboratory Management System</p>
       </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-4 shadow-2xl shadow-primary/5 sm:rounded-2xl sm:px-10 border border-slate-100">
-          <form className="space-y-6" onSubmit={handleLogin}>
-            
-            {/* رسالة الخطأ */}
+      <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="bg-white py-12 px-8 shadow-2xl rounded-[3rem] border border-slate-100 relative overflow-hidden">
+          
+          <form className="space-y-6 relative z-10" onSubmit={handleLogin}>
             {error && (
-              <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm font-bold border border-red-200 text-center animate-pulse">
+              <div className="bg-red-50 text-red-600 p-4 rounded-2xl text-[11px] font-black border border-red-100 text-center animate-shake">
                 {error}
               </div>
             )}
 
             <div>
-              <label className="block text-sm font-bold text-slate-700">البريد الإلكتروني</label>
-              <div className="mt-2 relative">
-                <input
-                  type="email"
-                  required
-                  className="appearance-none block w-full bg-slate-50 border border-slate-200 rounded-lg py-3 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                  placeholder="admin@medlab.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
-              </div>
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-2">رقم الموبايل / الإيميل</label>
+              <input
+                type="text" required
+                className="w-full bg-slate-50 border border-slate-200 rounded-2xl py-4 px-5 text-sm font-bold focus:ring-4 focus:ring-primary/10 focus:border-primary focus:bg-white outline-none transition-all"
+                placeholder="010XXXXXXXX"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
             </div>
 
             <div>
-              <label className="block text-sm font-bold text-slate-700">كلمة المرور</label>
-              <div className="mt-2 relative">
-                <input
-                  type="password"
-                  required
-                  className="appearance-none block w-full bg-slate-50 border border-slate-200 rounded-lg py-3 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-              </div>
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-2">كلمة المرور</label>
+              <input
+                type="password" required
+                className="w-full bg-slate-50 border border-slate-200 rounded-2xl py-4 px-5 text-sm font-bold focus:ring-4 focus:ring-primary/10 focus:border-primary focus:bg-white outline-none transition-all"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
             </div>
 
-            <div>
-              <button
-                type="submit"
-                className="w-full flex justify-center items-center gap-2 py-3 px-4 border border-transparent rounded-lg shadow-md text-sm font-bold text-white bg-primary hover:bg-slate-800 transition-all"
-              >
-                تسجيل الدخول
-                <span className="material-symbols-outlined text-sm">login</span>
-              </button>
-            </div>
+            <button type="submit" className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-sm shadow-xl hover:bg-primary transition-all flex items-center justify-center gap-3 active:scale-95">
+              دخول للنظام <span className="material-symbols-outlined text-lg">login</span>
+            </button>
           </form>
-          
-          <div className="mt-6 text-center text-xs text-slate-400">
-            <p>بيانات الدخول للتجربة:</p>
-            <p>admin@medlab.com / 123456</p>
+
+          {/* تلميحات الدخول */}
+          <div className="mt-10 pt-8 border-t border-slate-50 text-center">
+             <div className="grid grid-cols-1 gap-2">
+                <div className="flex justify-between items-center bg-slate-50 p-3 rounded-2xl border border-slate-100">
+                   <span className="text-[10px] font-black text-slate-500 uppercase">المدير: admin@lab.com</span>
+                   <span className="text-[10px] font-bold text-primary font-mono">123</span>
+                </div>
+                <div className="flex justify-between items-center bg-slate-50 p-3 rounded-2xl border border-slate-100">
+                   <span className="text-[10px] font-black text-slate-500 uppercase">المساعد: staff@lab.com</span>
+                   <span className="text-[10px] font-bold text-amber-600 font-mono">123</span>
+                </div>
+                <div className="flex justify-between items-center bg-slate-50 p-3 rounded-2xl border border-slate-100">
+                   <span className="text-[10px] font-black text-slate-500 uppercase">المريض: 01011111111</span>
+                   <span className="text-[10px] font-bold text-emerald-600 font-mono">123</span>
+                </div>
+             </div>
           </div>
+
         </div>
       </div>
     </div>

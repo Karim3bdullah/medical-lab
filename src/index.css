@@ -1,16 +1,16 @@
-@import "tailwindcss";
-
+/* 1. استدعاء خطوط جوجل الأول عشان المتصفح ميزعلش */
 @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;600&family=Montserrat:wght@400;600&display=swap');
 
-@theme {
+/* 2. استدعاء تيلويند ييجي بعده */
+@import "tailwindcss";
 
+@theme {
   --color-primary: #0f1729;
   --color-accent: #2563eb;
   --color-medical-blue: #3b82f6;
   --color-background-light: #f6f7f8;
   --color-background-dark: #14171e;
   
- 
   --font-tajawal: "Tajawal", sans-serif;
   --font-montserrat: "Montserrat", sans-serif;
 }
@@ -20,6 +20,7 @@ body {
   font-family: var(--font-tajawal);
   background-color: var(--color-background-light);
 }
+
 @media print {
   body, html {
     background-color: white !important;

@@ -1,325 +1,296 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 
 const Inventory = () => {
+  // 1. الداتا الافتراضية للمخزون (بتتحفظ في المتصفح)
+  const [inventory, setInventory] = useState(() => {
+    const saved = localStorage.getItem('medlab_inventory');
+    if (saved) return JSON.parse(saved);
+    return [
+      { id: 'ITM-101', name: 'أنابيب سحب دم (EDTA)', category: 'مستهلكات طبية', qty: 450, minAlert: 100, unit: 'أنبوبة' },
+      { id: 'ITM-102', name: 'محلول تحليل سكر (Glucose Reagent)', category: 'كيماويات (Kits)', qty: 12, minAlert: 20, unit: 'علبة' },
+      { id: 'ITM-103', name: 'سرنجات سحب 3 سم', category: 'مستهلكات طبية', qty: 850, minAlert: 200, unit: 'سرنجة' },
+      { id: 'ITM-104', name: 'محلول وظائف كبد (ALT/AST)', category: 'كيماويات (Kits)', qty: 45, minAlert: 15, unit: 'علبة' },
+      { id: 'ITM-105', name: 'مسحات طبية (Alcohol Swabs)', category: 'مستهلكات عامة', qty: 0, minAlert: 50, unit: 'علبة' },
+    ];
+  });
+
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [newItem, setNewItem] = useState({ name: '', category: 'مستهلكات طبية', qty: '', minAlert: '', unit: 'قطعة' });
+
+  // تحديث الـ LocalStorage لما المخزون يتغير
+  useEffect(() => {
+    localStorage.setItem('medlab_inventory', JSON.stringify(inventory));
+  }, [inventory]);
+
+  // إحصائيات سريعة
+  const totalItems = inventory.length;
+  const outOfStock = inventory.filter(item => item.qty === 0).length;
+  const lowStock = inventory.filter(item => item.qty > 0 && item.qty <= item.minAlert).length;
+
+  // فلترة الجدول حسب البحث
+  const filteredInventory = inventory.filter(item => 
+    item.name.includes(searchQuery) || item.id.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  // دالة إضافة صنف جديد
+  const handleAddItem = (e) => {
+    e.preventDefault();
+    const itemId = `ITM-${Math.floor(100 + Math.random() * 900)}`;
+    const itemToAdd = {
+      id: itemId,
+      name: newItem.name,
+      category: newItem.category,
+      qty: parseInt(newItem.qty) || 0,
+      minAlert: parseInt(newItem.minAlert) || 10,
+      unit: newItem.unit
+    };
+    
+    setInventory([itemToAdd, ...inventory]);
+    setIsAddModalOpen(false);
+    setNewItem({ name: '', category: 'مستهلكات طبية', qty: '', minAlert: '', unit: 'قطعة' });
+  };
+
+  // دوال زيادة أو تقليل الكمية بسرعة من الجدول
+  const updateQuantity = (id, change) => {
+    setInventory(inventory.map(item => {
+      if (item.id === id) {
+        const newQty = item.qty + change;
+        return { ...item, qty: newQty < 0 ? 0 : newQty }; // عشان الكمية متقلش عن صفر
+      }
+      return item;
+    }));
+  };
+
+  // دالة لتحديد لون وشكل حالة الصنف
+  const getStatusBadge = (qty, minAlert) => {
+    if (qty === 0) return <span className="bg-red-100 text-red-700 px-3 py-1 rounded-md text-xs font-bold border border-red-200">نفذ من المخزن</span>;
+    if (qty <= minAlert) return <span className="bg-amber-100 text-amber-700 px-3 py-1 rounded-md text-xs font-bold border border-amber-200">قارب على النفاذ</span>;
+    return <span className="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-md text-xs font-bold border border-emerald-200">متوفر</span>;
+  };
+
   return (
     <>
-      {/* الهيدر العلوي */}
-      <header className="flex items-center justify-between whitespace-nowrap border-b border-solid border-slate-200 bg-white px-10 py-3 sticky top-0 z-10 shrink-0">
-        <div className="flex items-center gap-8">
-          <div className="flex items-center gap-4 text-primary">
-            <h2 className="text-primary text-lg font-bold leading-tight tracking-tight">مخزون المختبر</h2>
-          </div>
-          <label className="flex flex-col min-w-40 !h-10 max-w-64">
-            <div className="flex w-full flex-1 items-stretch rounded-lg h-full">
-              <div className="text-slate-500 flex border-none bg-slate-100 items-center justify-center pr-4 rounded-r-lg">
-                <span className="material-symbols-outlined text-xl">search</span>
-              </div>
-              <input 
-                className="flex w-full min-w-0 flex-1 border-none bg-slate-100 focus:outline-none focus:ring-2 focus:ring-accent h-full placeholder:text-slate-500 px-4 rounded-l-lg text-sm font-normal transition-all" 
-                placeholder="البحث في المستلزمات..." 
-                type="text" 
-              />
-            </div>
-          </label>
-        </div>
-        <div className="flex flex-1 justify-end gap-8">
-          <div className="flex gap-2">
-            <button className="flex items-center justify-center rounded-lg h-10 w-10 bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors">
-              <span className="material-symbols-outlined">notifications</span>
-            </button>
-            <button className="flex items-center justify-center rounded-lg h-10 w-10 bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors">
-              <span className="material-symbols-outlined">settings</span>
-            </button>
-          </div>
-          <div className="bg-center bg-no-repeat aspect-square bg-cover rounded-full h-10 w-10 border-2 border-slate-200" style={{ backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuDydamxHbqdu1ClbZ6v04WfseTnEYSG-Jh5HPmF15kuFoCYY0I81McC8pfU_U-MkiN3iE2YE4P5HSi_mZr2QtPz1fWCvJA-rWfP-VINKwR8ns6rRiUG375_a0paGWs7TFjf6jXpgjAILsfWG1Fp3j2Xi_3zgQTvmF0YmbFEVv-nQiZxpNlhMhmZoh9MH7ZvZvSybvHUWNyUI3NnvhmKFGvhEomzSo4wUcZ815YymcY5QGpcW1BKy9mfzul5OcuZEcVIRwCDPTYbww")' }}></div>
-        </div>
+      <header className="h-16 border-b border-slate-200 bg-white px-8 flex items-center justify-between shrink-0">
+        <h1 className="text-xl font-bold tracking-tight text-primary flex items-center gap-2">
+          <span className="material-symbols-outlined">inventory_2</span> إدارة المخزون والمستهلكات
+        </h1>
+        <button 
+          onClick={() => setIsAddModalOpen(true)}
+          className="bg-primary text-white px-5 py-2 rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-slate-800 transition-all shadow-md"
+        >
+          <span className="material-symbols-outlined text-sm">add_box</span> إضافة صنف جديد
+        </button>
       </header>
 
-      {/* محتوى الصفحة الأساسي */}
-      <main className="flex-1 overflow-y-auto px-10 py-8 max-w-[1440px] mx-auto w-full">
+      <main className="flex-1 overflow-y-auto p-8 bg-background-light space-y-8">
         
-        {/* كروت الإحصائيات الأربعة */}
-        <div className="flex flex-wrap gap-4 mb-8">
-          <div className="flex min-w-[200px] flex-1 flex-col gap-2 rounded-xl p-6 bg-white shadow-sm border border-slate-200">
-            <div className="flex justify-between items-start">
-              <p className="text-slate-500 text-sm font-medium">إجمالي العناصر</p>
-              <span className="material-symbols-outlined text-slate-400">inventory_2</span>
-            </div>
-            <p className="text-primary tracking-tight text-3xl font-extrabold">1,240</p>
-            <div className="flex items-center gap-1">
-              <span className="material-symbols-outlined text-emerald-500 text-sm">trending_up</span>
-              <p className="text-emerald-500 text-xs font-bold">+2.4% عن الشهر الماضي</p>
-            </div>
-          </div>
-          <div className="flex min-w-[200px] flex-1 flex-col gap-2 rounded-xl p-6 bg-white shadow-sm border border-red-100">
-            <div className="flex justify-between items-start">
-              <p className="text-slate-500 text-sm font-medium">تنبيهات نقص المخزون</p>
-              <span className="material-symbols-outlined text-red-500">warning</span>
-            </div>
-            <p className="text-red-600 tracking-tight text-3xl font-extrabold">12</p>
-            <p className="text-red-500 text-xs font-bold">مطلوب إجراء فوري</p>
-          </div>
-          <div className="flex min-w-[200px] flex-1 flex-col gap-2 rounded-xl p-6 bg-white shadow-sm border border-slate-200">
-            <div className="flex justify-between items-start">
-              <p className="text-slate-500 text-sm font-medium">طلبات إعادة التزويد المعلقة</p>
-              <span className="material-symbols-outlined text-slate-400">pending_actions</span>
-            </div>
-            <p className="text-primary tracking-tight text-3xl font-extrabold">05</p>
-            <p className="text-slate-400 text-xs font-medium">التسليم المتوقع: 24 أكتوبر</p>
-          </div>
-          <div className="flex min-w-[200px] flex-1 flex-col gap-2 rounded-xl p-6 bg-white shadow-sm border border-slate-200">
-            <div className="flex justify-between items-start">
-              <p className="text-slate-500 text-sm font-medium">تنتهي صلاحيتها قريباً</p>
-              <span className="material-symbols-outlined text-amber-500">hourglass_empty</span>
-            </div>
-            <p className="text-primary tracking-tight text-3xl font-extrabold">08</p>
-            <p className="text-amber-500 text-xs font-bold">تنتهي خلال 30 يوماً</p>
-          </div>
-        </div>
-
-        {/* عنوان الجدول وأزرار الإضافة */}
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-2xl font-extrabold text-primary">مخزون المستلزمات</h1>
-            <p className="text-slate-500 text-sm mt-1">إدارة الكواشف والمواد الكيميائية والمستهلكات المختبرية.</p>
-          </div>
-          <div className="flex gap-3">
-            <button className="flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-700 rounded-lg font-bold text-sm hover:bg-slate-200 transition-colors">
-              <span className="material-symbols-outlined text-xl">filter_list</span> تصفية
-            </button>
-            <button className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg font-bold text-sm hover:bg-slate-800 transition-all shadow-md">
-              <span className="material-symbols-outlined text-xl">add</span> إضافة مستلزمات
-            </button>
-          </div>
-        </div>
-
-        {/* التابات العلوية للجدول */}
-        <div className="border-b border-slate-200 mb-6 flex items-center justify-between">
-          <div className="flex gap-8">
-            <button className="border-b-2 border-primary pb-4 px-1 text-sm font-bold text-primary">كل المستلزمات</button>
-            <button className="border-b-2 border-transparent pb-4 px-1 text-sm font-medium text-slate-500 hover:text-slate-700">الكواشف</button>
-            <button className="border-b-2 border-transparent pb-4 px-1 text-sm font-medium text-slate-500 hover:text-slate-700">المواد الكيميائية</button>
-            <button className="border-b-2 border-transparent pb-4 px-1 text-sm font-medium text-slate-500 hover:text-slate-700">الأدوات المخبرية</button>
-            <button className="border-b-2 border-transparent pb-4 px-1 text-sm font-medium text-slate-500 hover:text-slate-700">معدات الوقاية</button>
-          </div>
-        </div>
-
-        {/* جدول المخزون الكامل */}
-        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
-          <table className="w-full text-right border-collapse">
-            <thead>
-              <tr className="bg-slate-50 border-b border-slate-200">
-                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">تفاصيل العنصر</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">الفئة</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">مستوى المخزون</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">الحالة</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">تاريخ الانتهاء</th>
-                <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-left">الإجراءات</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              
-              {/* عنصر 1 */}
-              <tr className="hover:bg-slate-50/80 transition-colors">
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-slate-100 rounded flex items-center justify-center text-slate-400">
-                      <span className="material-symbols-outlined">science</span>
-                    </div>
-                    <div>
-                      <p className="text-sm font-bold text-slate-900">إيثانول 70% 5 لتر</p>
-                      <p className="text-xs text-slate-400 font-medium">دفعة: ETH-2024-001</p>
-                    </div>
-                  </div>
-                </td>
-                <td className="px-6 py-4"><span className="px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-100 text-slate-600">المواد الكيميائية</span></td>
-                <td className="px-6 py-4">
-                  <div className="flex flex-col gap-1.5 w-48">
-                    <div className="flex justify-between text-xs font-bold">
-                      <span className="text-slate-700">85%</span>
-                      <span className="text-slate-400">85 / 100 لتر</span>
-                    </div>
-                    <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-                      <div className="h-full bg-emerald-500 rounded-full" style={{ width: '85%' }}></div>
-                    </div>
-                  </div>
-                </td>
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-2 text-emerald-600 font-bold text-xs uppercase">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500"></span>متوفر
-                  </div>
-                </td>
-                <td className="px-6 py-4"><p className="text-sm font-medium text-slate-600">15 ديسمبر 2024</p></td>
-                <td className="px-6 py-4 text-left"><button className="text-primary font-bold text-sm hover:underline">إدارة</button></td>
-              </tr>
-
-              {/* عنصر 2 - تنبيه حرج */}
-              <tr className="bg-red-50/30 hover:bg-red-50/50 transition-colors border-r-4 border-red-500">
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-red-100 rounded flex items-center justify-center text-red-500">
-                      <span className="material-symbols-outlined">vaccines</span>
-                    </div>
-                    <div>
-                      <p className="text-sm font-bold text-slate-900">طقم كواشف ألفا-9</p>
-                      <p className="text-xs text-slate-400 font-medium">دفعة: RGT-9922-X</p>
-                    </div>
-                  </div>
-                </td>
-                <td className="px-6 py-4"><span className="px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-100 text-slate-600">الكواشف</span></td>
-                <td className="px-6 py-4">
-                  <div className="flex flex-col gap-1.5 w-48">
-                    <div className="flex justify-between text-xs font-bold">
-                      <span className="text-red-600">12%</span>
-                      <span className="text-slate-400">06 / 50 وحدة</span>
-                    </div>
-                    <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-                      <div className="h-full bg-red-500 rounded-full" style={{ width: '12%' }}></div>
-                    </div>
-                  </div>
-                </td>
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-2 text-red-600 font-bold text-xs uppercase animate-pulse">
-                    <span className="material-symbols-outlined text-sm">error</span> نقص في المخزون
-                  </div>
-                </td>
-                <td className="px-6 py-4"><p className="text-sm font-medium text-slate-600">20 أكتوبر 2024</p></td>
-                <td className="px-6 py-4 text-left"><button className="bg-primary text-white text-xs font-bold px-3 py-1.5 rounded hover:bg-slate-800 transition-all shadow-sm">طلب إعادة تزويد</button></td>
-              </tr>
-
-              {/* عنصر 3 */}
-              <tr className="hover:bg-slate-50/80 transition-colors">
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-slate-100 rounded flex items-center justify-center text-slate-400">
-                      <span className="material-symbols-outlined">water_drop</span>
-                    </div>
-                    <div>
-                      <p className="text-sm font-bold text-slate-900">محلول ملحي 0.9%</p>
-                      <p className="text-xs text-slate-400 font-medium">دفعة: SLN-4412-B</p>
-                    </div>
-                  </div>
-                </td>
-                <td className="px-6 py-4"><span className="px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-100 text-slate-600">المواد الكيميائية</span></td>
-                <td className="px-6 py-4">
-                  <div className="flex flex-col gap-1.5 w-48">
-                    <div className="flex justify-between text-xs font-bold">
-                      <span className="text-amber-600">42%</span>
-                      <span className="text-slate-400">21 / 50 عبوة</span>
-                    </div>
-                    <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-                      <div className="h-full bg-amber-500 rounded-full" style={{ width: '42%' }}></div>
-                    </div>
-                  </div>
-                </td>
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-2 text-amber-600 font-bold text-xs uppercase">
-                    <span className="w-2 h-2 rounded-full bg-amber-500"></span> متوسط
-                  </div>
-                </td>
-                <td className="px-6 py-4"><p className="text-sm font-medium text-slate-600">05 يناير 2025</p></td>
-                <td className="px-6 py-4 text-left"><button className="text-primary font-bold text-sm hover:underline">إدارة</button></td>
-              </tr>
-
-              {/* عنصر 4 */}
-              <tr className="hover:bg-slate-50/80 transition-colors">
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-slate-100 rounded flex items-center justify-center text-slate-400">
-                      <span className="material-symbols-outlined">pan_tool</span>
-                    </div>
-                    <div>
-                      <p className="text-sm font-bold text-slate-900">قفازات لاتكس (مقاس M)</p>
-                      <p className="text-xs text-slate-400 font-medium">دفعة: GLV-MED-88</p>
-                    </div>
-                  </div>
-                </td>
-                <td className="px-6 py-4"><span className="px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-100 text-slate-600">الأدوات / وقاية</span></td>
-                <td className="px-6 py-4">
-                  <div className="flex flex-col gap-1.5 w-48">
-                    <div className="flex justify-between text-xs font-bold">
-                      <span className="text-slate-700">92%</span>
-                      <span className="text-slate-400">184 / 200 صندوق</span>
-                    </div>
-                    <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-                      <div className="h-full bg-emerald-500 rounded-full" style={{ width: '92%' }}></div>
-                    </div>
-                  </div>
-                </td>
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-2 text-emerald-600 font-bold text-xs uppercase">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500"></span> متوفر
-                  </div>
-                </td>
-                <td className="px-6 py-4"><p className="text-sm font-medium text-slate-600">لا ينطبق</p></td>
-                <td className="px-6 py-4 text-left"><button className="text-primary font-bold text-sm hover:underline">إدارة</button></td>
-              </tr>
-
-              {/* عنصر 5 - انتهاء الصلاحية */}
-              <tr className="bg-amber-50/30 hover:bg-amber-50/50 transition-colors">
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-amber-100 rounded flex items-center justify-center text-amber-600">
-                      <span className="material-symbols-outlined">experiment</span>
-                    </div>
-                    <div>
-                      <p className="text-sm font-bold text-slate-900">مزيج تفاعل البوليميراز (4x)</p>
-                      <p className="text-xs text-slate-400 font-medium">دفعة: PCR-552</p>
-                    </div>
-                  </div>
-                </td>
-                <td className="px-6 py-4"><span className="px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-100 text-slate-600">الكواشف</span></td>
-                <td className="px-6 py-4">
-                  <div className="flex flex-col gap-1.5 w-48">
-                    <div className="flex justify-between text-xs font-bold">
-                      <span className="text-slate-700">74%</span>
-                      <span className="text-slate-400">15 / 20 أنبوبة</span>
-                    </div>
-                    <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-                      <div className="h-full bg-emerald-500 rounded-full" style={{ width: '74%' }}></div>
-                    </div>
-                  </div>
-                </td>
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-2 text-amber-600 font-bold text-xs uppercase">
-                    <span className="material-symbols-outlined text-sm">schedule</span> تنتهي صلاحيته
-                  </div>
-                </td>
-                <td className="px-6 py-4"><p className="text-sm font-bold text-amber-600">12 سبتمبر 2024</p></td>
-                <td className="px-6 py-4 text-left"><button className="text-primary font-bold text-sm hover:underline">إدارة</button></td>
-              </tr>
-            </tbody>
-          </table>
-          
-          {/* Pagination */}
-          <div className="px-6 py-4 bg-slate-50 flex items-center justify-between border-t border-slate-200">
-            <p className="text-xs font-bold text-slate-500 uppercase tracking-tight">عرض 1 إلى 5 من أصل 1,240 نتيجة</p>
-            <div className="flex gap-2">
-              <button className="px-3 py-1 bg-primary text-white text-xs font-bold rounded">1</button>
-              <button className="px-3 py-1 bg-white border border-slate-200 text-slate-600 text-xs font-bold rounded hover:border-primary transition-colors">2</button>
-              <button className="px-3 py-1 bg-white border border-slate-200 text-slate-600 text-xs font-bold rounded hover:border-primary transition-colors">3</button>
-            </div>
-          </div>
-        </div>
-
-        {/* بانر الذكاء الاصطناعي لإعادة التزويد */}
-        <div className="mt-8 p-6 bg-primary rounded-xl text-white flex flex-col md:flex-row items-center justify-between shadow-lg shadow-primary/30">
-          <div className="flex items-center gap-4 mb-4 md:mb-0">
-            <div className="w-14 h-14 bg-white/10 rounded-full flex items-center justify-center border border-white/20">
-              <span className="material-symbols-outlined text-3xl">shopping_cart_checkout</span>
-            </div>
+        {/* === كروت الإحصائيات === */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between">
             <div>
-              <h3 className="text-xl font-bold">إعادة التزويد التلقائي الشامل</h3>
-              <p className="text-slate-300 text-sm">هناك <span className="text-white font-bold">12 عنصراً</span> تحت الحد الحرج. هل تريد إنشاء طلب مجمع الآن؟</p>
+              <p className="text-sm font-bold text-slate-500 mb-1">إجمالي الأصناف</p>
+              <h3 className="text-3xl font-black text-slate-800 font-montserrat">{totalItems}</h3>
+            </div>
+            <div className="w-14 h-14 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center">
+              <span className="material-symbols-outlined text-2xl">category</span>
             </div>
           </div>
-          <div className="flex gap-3">
-            <button className="px-6 py-2 bg-white text-primary rounded-lg font-bold text-sm hover:bg-slate-100 transition-colors shadow-sm">مراجعة المحدد</button>
-            <button className="px-6 py-2 bg-white/10 border border-white/30 rounded-lg font-bold text-sm hover:bg-white/20 transition-colors">تجاهل التنبيه</button>
+          
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-amber-200 bg-amber-50/30 flex items-center justify-between">
+            <div>
+              <p className="text-sm font-bold text-amber-600 mb-1">تنبيه: قارب على النفاذ</p>
+              <h3 className="text-3xl font-black text-amber-600 font-montserrat">{lowStock}</h3>
+            </div>
+            <div className="w-14 h-14 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center">
+              <span className="material-symbols-outlined text-2xl">warning</span>
+            </div>
+          </div>
+
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-red-200 bg-red-50/30 flex items-center justify-between">
+            <div>
+              <p className="text-sm font-bold text-red-600 mb-1">أصناف نفذت تماماً</p>
+              <h3 className="text-3xl font-black text-red-600 font-montserrat">{outOfStock}</h3>
+            </div>
+            <div className="w-14 h-14 bg-red-100 text-red-600 rounded-full flex items-center justify-center">
+              <span className="material-symbols-outlined text-2xl">error</span>
+            </div>
           </div>
         </div>
 
+        {/* === جدول المخزون === */}
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+          
+          {/* شريط البحث */}
+          <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+            <h3 className="font-bold text-primary">سجل المستهلكات</h3>
+            <div className="relative w-72">
+              <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">search</span>
+              <input 
+                type="text" 
+                placeholder="بحث باسم الصنف أو الكود..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pr-9 pl-4 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-primary transition-all"
+              />
+            </div>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-right">
+              <thead className="bg-white text-xs text-slate-500 uppercase font-bold border-b border-slate-200">
+                <tr>
+                  <th className="py-4 px-6 w-24">كود الصنف</th>
+                  <th className="py-4 px-6">اسم الصنف والتصنيف</th>
+                  <th className="py-4 px-6 text-center">الكمية المتاحة</th>
+                  <th className="py-4 px-6 text-center">الحالة</th>
+                  <th className="py-4 px-6 text-center">إجراءات سريعة</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {filteredInventory.length > 0 ? (
+                  filteredInventory.map((item) => (
+                    <tr key={item.id} className="hover:bg-slate-50 transition-colors">
+                      <td className="py-4 px-6 font-mono text-sm text-slate-500 font-bold">{item.id}</td>
+                      <td className="py-4 px-6">
+                        <p className="font-bold text-slate-800">{item.name}</p>
+                        <p className="text-[10px] text-primary bg-blue-50 inline-block px-2 py-0.5 rounded mt-1 font-bold">{item.category}</p>
+                      </td>
+                      <td className="py-4 px-6 text-center">
+                        <div className="flex items-baseline justify-center gap-1">
+                          <span className={`text-lg font-black font-montserrat ${item.qty <= item.minAlert ? (item.qty === 0 ? 'text-red-600' : 'text-amber-500') : 'text-slate-800'}`}>
+                            {item.qty}
+                          </span>
+                          <span className="text-xs text-slate-400 font-bold">{item.unit}</span>
+                        </div>
+                        <p className="text-[10px] text-slate-400 mt-1">حد التنبيه: {item.minAlert}</p>
+                      </td>
+                      <td className="py-4 px-6 text-center">
+                        {getStatusBadge(item.qty, item.minAlert)}
+                      </td>
+                      <td className="py-4 px-6">
+                        <div className="flex items-center justify-center gap-2">
+                          <button 
+                            onClick={() => updateQuantity(item.id, -1)}
+                            disabled={item.qty === 0}
+                            className="w-8 h-8 rounded bg-red-50 text-red-600 hover:bg-red-100 flex items-center justify-center disabled:opacity-50 transition-colors"
+                            title="صرف وحدة واحدة"
+                          >
+                            <span className="material-symbols-outlined text-sm">remove</span>
+                          </button>
+                          <button 
+                            onClick={() => updateQuantity(item.id, 1)}
+                            className="w-8 h-8 rounded bg-emerald-50 text-emerald-600 hover:bg-emerald-100 flex items-center justify-center transition-colors"
+                            title="إضافة وحدة واحدة"
+                          >
+                            <span className="material-symbols-outlined text-sm">add</span>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="5" className="py-12 text-center">
+                      <div className="flex flex-col items-center justify-center text-slate-400">
+                        <span className="material-symbols-outlined text-5xl mb-2 opacity-50">inventory</span>
+                        <p className="text-sm font-bold">لا يوجد صنف بهذا الاسم في المخزن.</p>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </main>
+
+      {/* ========================================= */}
+      {/* نافذة إضافة صنف جديد */}
+      {/* ========================================= */}
+      {isAddModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
+            
+            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+              <h3 className="font-bold text-primary flex items-center gap-2">
+                <span className="material-symbols-outlined text-primary">add_box</span> إدخال صنف جديد
+              </h3>
+              <button onClick={() => setIsAddModalOpen(false)} className="text-slate-400 hover:text-red-500">
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+
+            <form onSubmit={handleAddItem} className="p-6 space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">اسم الصنف</label>
+                <input 
+                  type="text" required 
+                  placeholder="مثال: شرائط تحليل سكر"
+                  className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:border-primary outline-none"
+                  value={newItem.name} onChange={(e) => setNewItem({...newItem, name: e.target.value})}
+                />
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">التصنيف</label>
+                  <select 
+                    className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:border-primary outline-none bg-white"
+                    value={newItem.category} onChange={(e) => setNewItem({...newItem, category: e.target.value})}
+                  >
+                    <option value="كيماويات (Kits)">كيماويات (Kits)</option>
+                    <option value="مستهلكات طبية">مستهلكات طبية (أنابيب، سرنجات)</option>
+                    <option value="مستهلكات عامة">مستهلكات عامة (قطن، كحول)</option>
+                    <option value="أخرى">أخرى</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">وحدة القياس</label>
+                  <select 
+                    className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:border-primary outline-none bg-white"
+                    value={newItem.unit} onChange={(e) => setNewItem({...newItem, unit: e.target.value})}
+                  >
+                    <option value="علبة">علبة</option>
+                    <option value="أنبوبة">أنبوبة</option>
+                    <option value="سرنجة">سرنجة</option>
+                    <option value="قطعة">قطعة</option>
+                    <option value="لتر">لتر</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 border-t border-slate-100 pt-4 mt-2">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">الكمية الافتتاحية</label>
+                  <input 
+                    type="number" required min="0"
+                    placeholder="0"
+                    className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm font-montserrat focus:border-primary outline-none"
+                    value={newItem.qty} onChange={(e) => setNewItem({...newItem, qty: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1 text-amber-600">التنبيه عند الوصول لـ (حد الخطر)</label>
+                  <input 
+                    type="number" required min="1"
+                    placeholder="10"
+                    className="w-full border border-amber-200 rounded-lg px-3 py-2 text-sm font-montserrat focus:border-amber-500 outline-none bg-amber-50/30"
+                    value={newItem.minAlert} onChange={(e) => setNewItem({...newItem, minAlert: e.target.value})}
+                  />
+                </div>
+              </div>
+
+              <div className="pt-4 flex justify-end gap-3 border-t border-slate-100 mt-2">
+                <button type="button" onClick={() => setIsAddModalOpen(false)} className="px-4 py-2 text-sm font-bold text-slate-600 hover:bg-slate-100 rounded-lg">إلغاء</button>
+                <button type="submit" className="px-6 py-2 bg-primary text-white text-sm font-bold rounded-lg hover:bg-slate-800 shadow-md">
+                  حفظ في المخزن
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </>
   );
 };

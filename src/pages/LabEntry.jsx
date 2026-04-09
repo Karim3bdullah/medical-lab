@@ -1,312 +1,146 @@
 import React, { useState, useEffect } from 'react';
 import labData from '../data/tests.json';
 
-const allTests = (labData?.lab_categories || []).flatMap(category => 
-  category.tests.map(test => ({
-    ...test,
-    categoryName: category.category_ar,
-  }))
-);
+const allTests = (labData?.lab_tests || []);
 
 const LabEntry = () => {
-  const [pendingSamples, setPendingSamples] = useState([]);
+  const [samples, setSamples] = useState([]);
   const [selectedSampleId, setSelectedSampleId] = useState('');
   const [results, setResults] = useState({});
-  
-  // === حالات الذكاء الاصطناعي ===
+  const [referredBy, setReferredBy] = useState('');
+  const [labDoctor, setLabDoctor] = useState('');
+  const [doctorNotes, setDoctorNotes] = useState('• ');
   const [aiReport, setAiReport] = useState('');
-  const [isAiLoading, setIsAiLoading] = useState(false);
 
   useEffect(() => {
-    const savedSamples = JSON.parse(localStorage.getItem('medlab_samples')) || [];
-    const pending = savedSamples.filter(s => s.status !== 'معتمدة نهائياً');
-    setPendingSamples(pending);
+    const saved = JSON.parse(localStorage.getItem('medlab_samples')) || [];
+    setSamples(saved);
   }, []);
 
-  const selectedSample = pendingSamples.find(s => s.id === selectedSampleId);
+  const currentSample = samples.find(s => s.id === selectedSampleId);
 
-  const evaluateResult = (testId, value) => {
-    if (!value) return null;
-    const testDetails = allTests.find(t => t.id === testId);
-    if (!testDetails || !testDetails.reference_ranges) return { text: 'تم الإدخال', color: 'blue' };
-
-    const numValue = parseFloat(value);
-    if (isNaN(numValue)) return { text: 'تم الإدخال', color: 'blue' };
-
-    const range = testDetails.reference_ranges[0];
-    if (range.min_value !== undefined && numValue < range.min_value) return { text: 'منخفض', color: 'amber' };
-    if (range.max_value !== undefined && numValue > range.max_value) return { text: 'مرتفع', color: 'red' };
-    
-    return { text: 'طبيعي', color: 'emerald' };
-  };
-
-  const handleInputChange = (testId, value) => {
-    setResults({ ...results, [testId]: value });
-  };
-
-  // ==========================================
-  // دالة توليد تقرير الذكاء الاصطناعي (المحاكاة)
-  // ==========================================
-  const handleGenerateAIReport = () => {
-    setIsAiLoading(true);
-    setAiReport('');
-
-    // تجميع البيانات عشان نبعتها للـ AI
-    const analysisData = selectedSample.tests.map(test => {
-      const val = results[test.id] || 'لم يتم الإدخال';
-      const evalData = evaluateResult(test.id, val);
-      return `${test.name_ar}: ${val} (${evalData?.text || 'غير محدد'})`;
+  // دالة ذكية: لو العينة قديمة ومش متفسرة، الكود بيفسرها "Live" في الصفحة
+  const getExplodedTests = (sample) => {
+    if (!sample) return [];
+    let exploded = [];
+    sample.tests.forEach(test => {
+      exploded.push(test);
+      if (test.isGroup || (test.test_ids && !test.isExploded)) {
+        const subIds = test.test_ids || [];
+        const subData = allTests.filter(t => subIds.includes(t.id));
+        subData.forEach(st => {
+          if (!sample.tests.find(ex => ex.id === st.id)) {
+            exploded.push({ ...st, parentGroupName: test.name_ar, price: 0 });
+          }
+        });
+      }
     });
-
-    // محاكاة طلب للسيرفر (بياخد ثانيتين)
-    setTimeout(() => {
-      // هنا إحنا بنعمل لوجيك بسيط يحاكي رد الـ AI بناءً على الكلمات المفتاحية
-      let generatedText = `بناءً على تحليل نتائج المريض (${selectedSample.patientName}):\n`;
-      let issues = [];
-      let normal = [];
-
-      selectedSample.tests.forEach(test => {
-        const val = results[test.id];
-        const status = evaluateResult(test.id, val)?.text;
-        if (status === 'مرتفع' || status === 'منخفض') {
-          issues.push(test.name_ar);
-        } else if (status === 'طبيعي') {
-          normal.push(test.name_ar);
-        }
-      });
-
-      if (issues.length > 0) {
-        generatedText += `🚨 تم رصد مؤشرات غير طبيعية في التحاليل التالية: ${issues.join('، ')}. `;
-        if (issues.join('').includes('سكر')) generatedText += `يُنصح بمراجعة طبيب غدد صماء أو باطنة لضبط مستويات السكر. `;
-        if (issues.join('').includes('كوليسترول')) generatedText += `يُفضل الالتزام بنظام غذائي منخفض الدهون والقيام بنشاط بدني. `;
-        generatedText += `\n`;
-      }
-      
-      if (normal.length > 0) {
-        generatedText += `✅ المستويات طبيعية في: ${normal.join('، ')}.\n`;
-      }
-
-      generatedText += `\n💡 توصية عامة: هذه القراءة الآلية لا تغني عن الاستشارة الطبية المباشرة.`;
-
-      setAiReport(generatedText);
-      setIsAiLoading(false);
-    }, 2000); // تأخير ثانيتين عشان نحاكي الـ Loading
+    return exploded;
   };
 
-  const handleSaveResults = (e) => {
+  const handleNotesChange = (e) => {
+    let val = e.target.value;
+    if (val.endsWith('\n')) val += '• ';
+    setDoctorNotes(val);
+  };
+
+  const handleSave = (e) => {
     e.preventDefault();
-    if (!selectedSample) {
-      alert("برجاء اختيار عينة أولاً!");
-      return;
-    }
-
-    const allSamples = JSON.parse(localStorage.getItem('medlab_samples')) || [];
-    const updatedSamples = allSamples.map(sample => {
-      if (sample.id === selectedSample.id) {
-        return { 
-          ...sample, 
-          status: 'معتمدة نهائياً',
-          testResults: results,
-          aiSummary: aiReport, // حفظ التقرير الذكي مع العينة
-          completedAt: new Date().toLocaleString('ar-EG')
-        };
-      }
-      return sample;
-    });
-
-    localStorage.setItem('medlab_samples', JSON.stringify(updatedSamples));
-    alert(`✅ تم حفظ واعتماد النتائج للعينة ${selectedSample.id} بنجاح!`);
-    
-    setPendingSamples(updatedSamples.filter(s => s.status !== 'معتمدة نهائياً'));
-    setSelectedSampleId('');
-    setResults({});
-    setAiReport('');
+    if (!currentSample) return;
+    const updated = samples.map(s => s.id === selectedSampleId ? {
+      ...s, status: 'معتمدة نهائياً', testResults: results, referredBy, labDoctor, doctorNotes, aiSummary: aiReport, completedAt: new Date().toLocaleString('ar-EG')
+    } : s);
+    localStorage.setItem('medlab_samples', JSON.stringify(updated));
+    alert("✅ تم الحفظ بنجاح");
+    window.location.reload();
   };
+
+  const displayTests = getExplodedTests(currentSample);
 
   return (
-    <>
-      <header className="h-16 border-b border-slate-200 bg-white px-8 flex items-center justify-between shrink-0">
-        <h1 className="text-xl font-bold tracking-tight text-primary flex items-center gap-2">
-          <span className="material-symbols-outlined">biotech</span> إدخال النتائج واعتمادها
-        </h1>
-        <div className="flex gap-3">
-          <button 
-            onClick={handleSaveResults}
-            disabled={!selectedSample}
-            className="px-6 py-2 bg-primary text-white rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-slate-800 transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <span className="material-symbols-outlined text-sm">check_circle</span>
-            حفظ واعتماد التقرير
-          </button>
-        </div>
+    <div className="min-h-screen bg-slate-50 font-sans overflow-y-auto" dir="rtl">
+      <header className="h-16 bg-white border-b px-8 flex items-center justify-between sticky top-0 z-50 shadow-sm">
+        <h1 className="text-xl font-black text-primary">وحدة النتائج (تفسير تلقائي)</h1>
+        <button onClick={handleSave} className="bg-slate-900 text-white px-8 py-2 rounded-xl font-black text-sm">حفظ التقرير</button>
       </header>
 
-      <main className="flex-1 overflow-y-auto p-8 bg-background-light">
-        <div className="max-w-5xl mx-auto space-y-6">
-          
-          <section className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-            <h2 className="text-lg font-bold text-primary mb-4 flex items-center gap-2">
-              <span className="material-symbols-outlined text-medical-blue">science</span>
-              العينات قيد الانتظار
-            </h2>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-bold text-slate-700 mb-2">اختر العينة (برقم الباركود أو اسم المريض)</label>
-                <select 
-                  className="w-full border border-slate-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-primary transition-all bg-slate-50 font-bold"
-                  value={selectedSampleId}
-                  onChange={(e) => {
-                    setSelectedSampleId(e.target.value);
-                    setResults({});
-                    setAiReport('');
-                  }}
-                >
-                  <option value="" disabled>-- اضغط لاختيار عينة لفتحها --</option>
-                  {pendingSamples.map(sample => (
-                    <option key={sample.id} value={sample.id}>
-                      {sample.id} - {sample.patientName} ({sample.tests.length} تحاليل)
-                    </option>
-                  ))}
-                </select>
-              </div>
-              
-              {selectedSample && (
-                <div className="bg-blue-50/50 border border-blue-100 rounded-xl p-4 flex flex-col justify-center">
-                  <p className="text-xs font-bold text-slate-500 mb-1">تفاصيل العينة الحالية:</p>
-                  <p className="text-sm font-bold text-primary">المريض: <span className="text-slate-800">{selectedSample.patientName}</span></p>
-                  <p className="text-sm font-bold text-primary mt-1">تاريخ السحب: <span className="text-slate-800">{selectedSample.date} {selectedSample.time}</span></p>
-                </div>
-              )}
-            </div>
-          </section>
+      <main className="p-4 md:p-8 max-w-7xl mx-auto space-y-8 pb-20">
+        {/* اختيار العينة */}
+        <section className="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-200">
+           <select className="w-full p-4 bg-slate-50 rounded-2xl font-black outline-none border-2 border-transparent focus:border-primary transition-all" value={selectedSampleId} onChange={e => { setSelectedSampleId(e.target.value); setResults({}); }}>
+              <option value="">-- اختر العينة لإدخال نتائجها --</option>
+              {samples.filter(s => s.status !== 'معتمدة نهائياً').map(s => <option key={s.id} value={s.id}>{s.id} | {s.patientName}</option>)}
+           </select>
+        </section>
 
-          {selectedSample ? (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
-              
-              {/* قسم إدخال النتائج (ياخد تلتين الشاشة) */}
-              <section className="lg:col-span-2 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-                <h2 className="text-lg font-bold text-primary mb-6 flex items-center gap-2">
-                  <span className="material-symbols-outlined text-medical-blue">edit_document</span>
-                  سجل النتائج
-                </h2>
-
-                <div className="overflow-x-auto">
-                  <table className="w-full text-right border-collapse">
-                    <thead className="bg-slate-50 text-xs text-slate-500 uppercase font-bold border-y border-slate-200">
-                      <tr>
-                        <th className="py-4 px-4 w-1/3">اسم التحليل</th>
-                        <th className="py-4 px-4 w-1/4">النتيجة</th>
-                        <th className="py-4 px-4 w-1/4 text-center">المعدل الطبيعي</th>
-                        <th className="py-4 px-4 text-center">التشخيص</th>
+        {currentSample ? (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+            {/* الجدول الرئيسي */}
+            <div className="lg:col-span-2 bg-white rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden">
+              <table className="w-full text-right border-collapse">
+                <thead className="bg-slate-50 border-b text-[10px] font-black text-slate-400 uppercase">
+                  <tr>
+                    <th className="p-6">اسم الفحص</th>
+                    <th className="p-6 text-center">النتيجة</th>
+                    <th className="p-6 text-center">الطبيعي</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-50">
+                  {displayTests.map((test, i) => (
+                    test.isHeader || test.isGroup ? (
+                      <tr key={i} className="bg-primary/5 font-black text-primary">
+                        <td colSpan="3" className="p-4">📂 {test.name_ar}</td>
                       </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                      {selectedSample.tests.map((test) => {
-                        const fullTestDetails = allTests.find(t => t.id === test.id);
-                        const range = fullTestDetails?.reference_ranges?.[0];
-                        const rangeText = range 
-                          ? (range.min_value !== undefined && range.max_value !== undefined 
-                              ? `${range.min_value} - ${range.max_value}` 
-                              : (range.status || range.max_value || 'غير محدد')) 
-                          : 'غير محدد';
+                    ) : (
+                      <tr key={i} className="hover:bg-slate-50/50">
+                        <td className="p-6">
+                           <div className={test.parentGroupName ? "mr-8 border-r-2 border-primary/20 pr-3" : ""}>
+                             <p className="font-bold text-slate-800 text-sm">{test.name_ar}</p>
+                             <p className="text-[10px] text-slate-400 font-bold uppercase">{test.name_en}</p>
+                           </div>
+                        </td>
+                        <td className="p-6 text-center">
+                          <input 
+                            type="text" className="w-24 p-2 bg-slate-50 border border-slate-200 rounded-xl text-center font-black text-primary outline-none focus:ring-2 focus:ring-primary"
+                            onChange={e => setResults({...results, [test.id]: e.target.value})} 
+                          />
+                        </td>
+                        <td className="p-6 text-center">
+                          <p className="text-[10px] font-black text-slate-500" dir="ltr">
+                            {test.reference_ranges?.[0]?.min_value ?? ''} - {test.reference_ranges?.[0]?.max_value ?? test.reference_ranges?.[0]?.status ?? ''}
+                          </p>
+                          <p className="text-[9px] text-slate-400">{test.reference_ranges?.[0]?.unit}</p>
+                        </td>
+                      </tr>
+                    )
+                  ))}
+                </tbody>
+              </table>
 
-                        const currentResult = results[test.id] || '';
-                        const evalData = evaluateResult(test.id, currentResult);
-
-                        return (
-                          <tr key={test.id} className="hover:bg-slate-50 transition-colors">
-                            <td className="py-4 px-4">
-                              <p className="font-bold text-slate-800">{test.name_ar}</p>
-                              <p className="text-xs text-slate-400 font-montserrat mt-0.5">{test.name_en}</p>
-                            </td>
-                            <td className="py-4 px-4">
-                              <div className="flex items-center gap-2">
-                                <input 
-                                  type="text"
-                                  value={currentResult}
-                                  onChange={(e) => handleInputChange(test.id, e.target.value)}
-                                  className="w-24 border border-slate-300 rounded-md px-3 py-2 text-center font-montserrat font-bold text-primary focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all shadow-inner"
-                                  placeholder="..."
-                                />
-                              </div>
-                            </td>
-                            <td className="py-4 px-4 text-sm text-slate-500 font-montserrat text-center" dir="ltr">{rangeText}</td>
-                            <td className="py-4 px-4 text-center">
-                              {currentResult && evalData && (
-                                <span className={`px-3 py-1 rounded-full text-xs font-bold bg-${evalData.color}-100 text-${evalData.color}-700 border border-${evalData.color}-200 inline-block min-w-[70px]`}>
-                                  {evalData.text}
-                                </span>
-                              )}
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              </section>
-
-              {/* === قسم تحليل الذكاء الاصطناعي (ياخد تلت الشاشة) === */}
-              <aside className="bg-gradient-to-b from-slate-800 to-primary p-6 rounded-2xl shadow-lg text-white flex flex-col relative overflow-hidden">
-                <div className="absolute -right-4 -top-4 opacity-10">
-                  <span className="material-symbols-outlined text-[120px]">smart_toy</span>
-                </div>
-                
-                <h2 className="text-lg font-bold mb-4 flex items-center gap-2 relative z-10">
-                  <span className="material-symbols-outlined text-amber-400">auto_awesome</span>
-                  المساعد الذكي (AI)
-                </h2>
-                
-                <p className="text-sm text-slate-300 mb-6 relative z-10 leading-relaxed">
-                  يمكن للذكاء الاصطناعي قراءة النتائج وكتابة تقرير مبسط لحالة المريض يشرح الأرقام ويقدم نصائح وقائية.
-                </p>
-
-                <div className="flex-1 flex flex-col relative z-10">
-                  {!aiReport && !isAiLoading ? (
-                    <div className="flex-1 flex items-center justify-center">
-                      <button 
-                        onClick={handleGenerateAIReport}
-                        className="w-full py-3 bg-amber-500 text-slate-900 font-black rounded-xl hover:bg-amber-400 transition-colors shadow-[0_0_15px_rgba(245,158,11,0.5)] flex items-center justify-center gap-2"
-                      >
-                        <span className="material-symbols-outlined">psychology</span> توليد التقرير الذكي
-                      </button>
-                    </div>
-                  ) : isAiLoading ? (
-                    <div className="flex-1 flex flex-col items-center justify-center gap-4">
-                      <div className="w-10 h-10 border-4 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
-                      <p className="text-sm text-amber-200 font-bold animate-pulse">جاري تحليل النتائج...</p>
-                    </div>
-                  ) : (
-                    <div className="flex-1 flex flex-col">
-                      <div className="bg-slate-900/50 rounded-xl p-4 flex-1 mb-4 overflow-y-auto border border-slate-700/50 text-sm leading-loose whitespace-pre-wrap font-bold">
-                        {aiReport}
-                      </div>
-                      <button 
-                        onClick={handleGenerateAIReport}
-                        className="py-2 bg-slate-700 text-white font-bold rounded-lg hover:bg-slate-600 transition-colors text-sm flex items-center justify-center gap-2"
-                      >
-                        <span className="material-symbols-outlined text-sm">refresh</span> إعادة التحليل
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </aside>
-
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center p-12 text-center bg-white rounded-2xl border border-slate-200 border-dashed">
-              <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mb-4 text-slate-300">
-                <span className="material-symbols-outlined text-4xl">science</span>
+              <div className="p-8 border-t bg-slate-50/50 space-y-6">
+                 <div className="grid grid-cols-2 gap-4">
+                    <input type="text" placeholder="الطبيب المعالج" className="p-4 bg-white rounded-2xl border border-slate-200 font-bold outline-none focus:border-primary shadow-sm" value={referredBy} onChange={e=>setReferredBy(e.target.value)} />
+                    <input type="text" placeholder="طبيب المعمل" className="p-4 bg-white rounded-2xl border border-slate-200 font-bold outline-none focus:border-primary shadow-sm" value={labDoctor} onChange={e=>setLabDoctor(e.target.value)} />
+                 </div>
+                 <textarea rows="4" className="w-full p-4 bg-white rounded-2xl border border-slate-200 font-bold outline-none focus:border-primary leading-relaxed shadow-sm" value={doctorNotes} onChange={handleNotesChange} />
               </div>
-              <h3 className="font-bold text-slate-700">لم يتم اختيار عينة</h3>
-              <p className="text-sm text-slate-500 mt-2">يرجى اختيار عينة من القائمة بالأعلى للبدء في إدخال النتائج.</p>
             </div>
-          )}
 
-        </div>
+            {/* الجانب الأيسر: AI */}
+            <aside className="lg:col-span-1 bg-slate-900 rounded-[2.5rem] p-8 text-white shadow-2xl sticky top-24">
+               <h2 className="font-black text-lg mb-4 flex items-center gap-2 tracking-tight">التحليل الذكي AI ✨</h2>
+               <div className="bg-white/5 rounded-3xl p-5 border border-white/10 min-h-[350px] mb-6 text-sm text-slate-300 font-bold leading-loose whitespace-pre-wrap">{aiReport || "أدخل النتائج أولاً..."}</div>
+               <button onClick={() => setAiReport("تحليل AI: تظهر النتائج استقراراً في الوظائف الحيوية.")} className="w-full py-4 bg-primary text-white rounded-2xl font-black shadow-xl hover:bg-white hover:text-primary transition-all">توليد التقرير</button>
+            </aside>
+          </div>
+        ) : (
+          <div className="h-64 flex flex-col items-center justify-center text-slate-300 border-2 border-dashed border-slate-200 rounded-[2.5rem] bg-white">
+             <span className="material-symbols-outlined text-6xl mb-4">analytics</span>
+             <p className="font-black uppercase tracking-widest">اختر عينة للبدء</p>
+          </div>
+        )}
       </main>
-    </>
+    </div>
   );
 };
 

@@ -1,294 +1,249 @@
 import React, { useState, useEffect } from 'react';
+import API from '../services/api';
 
 const Patients = () => {
-  // 1. جلب البيانات من المتصفح
   const [patients, setPatients] = useState([]);
-  const [samples, setSamples] = useState([]);
-  
-  // 2. حالات التحكم في الواجهة
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [formData, setFormData] = useState({ name: '', age: '', gender: 'ذكر', phone: '' });
-  
-  // 3. حالة المريض النشط (اللي بتدوس عليه عشان تشوف تاريخه)
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [formData, setFormData] = useState({ 
+    first_name: '', 
+    last_name: '',
+    date_of_birth: '', 
+    gender: 'male', 
+    phone: '',
+    email: '',
+    national_id: '',
+    is_pregnant: false
+  });
   const [activePatient, setActivePatient] = useState(null);
+  const [activePatientSamples, setActivePatientSamples] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
-  // أول ما الصفحة تفتح، نجيب الداتا
-  useEffect(() => {
-    const savedPatients = JSON.parse(localStorage.getItem('medlab_patients')) || [];
-    const savedSamples = JSON.parse(localStorage.getItem('medlab_samples')) || [];
-    
-    setPatients(savedPatients);
-    setSamples(savedSamples);
-    
-    // لو فيه مرضى، خلي أول واحد هو النشط افتراضياً
-    if (savedPatients.length > 0) {
-      setActivePatient(savedPatients[0]);
+  const fetchPatients = async () => {
+    setLoading(true);
+    try {
+      const endpoint = searchQuery 
+        ? `/patients?search=${encodeURIComponent(searchQuery)}` 
+        : '/patients?per_page=50';
+      
+      const response = await API.get(endpoint);
+      const data = response.data?.data || [];
+      setPatients(data);
+      
+      if (data.length > 0 && !activePatient) {
+        setActivePatient(data[0]);
+      }
+    } catch (err) {
+      console.error('خطأ في جلب المرضى:', err);
+    } finally {
+      setLoading(false);
     }
-  }, []);
-
-  // تحديث داتا المرضى في المتصفح لما تتغير
-  useEffect(() => {
-    if (patients.length > 0) {
-      localStorage.setItem('medlab_patients', JSON.stringify(patients));
-    }
-  }, [patients]);
-
-  // فلترة المرضى بناءً على البحث
-  const filteredPatients = patients.filter(p => 
-    p.name.includes(searchQuery) || 
-    p.phone?.includes(searchQuery) || 
-    p.id.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  // دالة إضافة مريض جديد
-  const handleAddPatient = (e) => {
-    e.preventDefault();
-    const patientId = `PT-${Math.floor(1000 + Math.random() * 9000)}`;
-    const randomPassword = Math.floor(100000 + Math.random() * 900000).toString(); 
-
-    const newPatient = {
-      id: patientId,
-      name: formData.name,
-      initials: formData.name.split(' ').map(n => n[0]).join('.'),
-      age: formData.age,
-      gender: formData.gender,
-      phone: formData.phone,
-      joinDate: new Date().toLocaleDateString('ar-EG'),
-      status: 'مستقرة',
-      statusColor: 'emerald'
-    };
-
-    setPatients([newPatient, ...patients]);
-
-    // إنشاء حساب لدخول المريض
-    const existingUsers = JSON.parse(localStorage.getItem('medlab_users')) || [];
-    localStorage.setItem('medlab_users', JSON.stringify([...existingUsers, { 
-      email: formData.phone, 
-      password: randomPassword, 
-      role: 'Patient', 
-      name: formData.name, 
-      patientId: patientId 
-    }]));
-
-    alert(`✅ تم تسجيل المريض بنجاح!\n\nبيانات الدخول לבوابة المريض:\nرقم الهاتف: ${formData.phone}\nكلمة المرور: ${randomPassword}`);
-
-    setIsModalOpen(false);
-    setFormData({ name: '', age: '', gender: 'ذكر', phone: '' });
-    setActivePatient(newPatient); // خليه هو المريض النشط عشان نشوفه فوراً
   };
 
-  // استخراج فواتير/عينات المريض النشط بس
-  const activePatientSamples = samples.filter(s => s.patientId === activePatient?.id);
+  useEffect(() => {
+    fetchPatients();
+  }, [searchQuery]);
+
+  useEffect(() => {
+    if (activePatient?.id) {
+      API.get(`/patients/${activePatient.id}/visits`)
+        .then(res => setActivePatientSamples(res.data?.data || []))
+        .catch(err => console.error(err));
+    }
+  }, [activePatient]);
+
+  // 🎯 دالة التحقق الصارم من صحة البيانات لمنع الـ 422
+  const validateForm = () => {
+    const nameRegex = /^[\u0600-\u06FFa-zA-Z\s]+$/; // حروف فقط (عربي أو إنجليزي)
+    const phoneRegex = /^01[0125][0-9]{8}$/; // أرقام شبكات مصر 11 رقم
+    const nationalIdRegex = /^[0-9]{14}$/; // 14 رقم بالظبط
+
+    if (!nameRegex.test(formData.first_name.trim()) || !nameRegex.test(formData.last_name.trim())) {
+      alert("⚠️ يرجى إدخال اسم صحيح يحتوي على حروف فقط وبدون أرقام.");
+      return false;
+    }
+
+    if (!nationalIdRegex.test(formData.national_id.trim())) {
+      alert("⚠️ خطأ في الرقم القومي: يجب أن يتكون من 14 رقماً بالتمام والكمال.");
+      return false;
+    }
+
+    if (!phoneRegex.test(formData.phone.trim())) {
+      alert("⚠️ خطأ في رقم الهاتف: يجب أن يكون مكوناً من 11 رقماً ويبدأ بـ (010, 011, 012, 015).");
+      return false;
+    }
+
+    return true;
+  };
+
+  const handleAddPatient = async (e) => {
+    e.preventDefault();
+    
+    // تشغيل الفحص الأمني فوراً
+    if (!validateForm()) return;
+
+    setSubmitting(true);
+    try {
+      const response = await API.post('/patients', {
+        first_name: formData.first_name.trim(),
+        last_name: formData.last_name.trim(),
+        date_of_birth: formData.date_of_birth,
+        gender: formData.gender,
+        phone: formData.phone.trim(),
+        email: formData.email.trim(),
+        national_id: formData.national_id.trim(),
+        is_pregnant: formData.gender === 'female' ? formData.is_pregnant : false
+      });
+
+      const createdPatient = response.data?.data || response.data;
+      const assignedCode = createdPatient?.patient_code || createdPatient?.id || "غير معروف";
+
+      alert(`✅ تم إضافة المريض بنجاح!\n🎯 كود المريض للتسجيل في الطابور هو: ( ${assignedCode} )`);
+      
+      setIsModalOpen(false);
+      setFormData({ 
+        first_name: '', last_name: '', date_of_birth: '', 
+        gender: 'male', phone: '', email: '', 
+        national_id: '', is_pregnant: false 
+      });
+      fetchPatients();
+    } catch (err) {
+      alert('فشل إضافة المريض: ' + (err.response?.data?.message || err.message));
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <>
-      {/* --- الهيدر --- */}
-      <header className="h-16 border-b border-slate-200 bg-white px-8 flex items-center justify-between shrink-0">
-        <h1 className="text-xl font-bold tracking-tight text-primary flex items-center gap-2">
-          <span className="material-symbols-outlined">groups</span> إدارة المرضى
-        </h1>
-        <button onClick={() => setIsModalOpen(true)} className="bg-primary text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-slate-800 transition-all shadow-md">
-          <span className="material-symbols-outlined text-sm">person_add</span> تسجيل مريض جديد
+      <header className="h-16 border-b border-slate-200 bg-white px-8 flex items-center justify-between">
+        <h1 className="text-xl font-bold text-primary">إدارة ملفات المرضى الطبية</h1>
+        <button 
+          onClick={() => setIsModalOpen(true)} 
+          className="bg-primary text-white px-5 py-2 rounded-lg text-sm font-bold flex items-center gap-2"
+        >
+          تسجيل مريض جديد
         </button>
       </header>
 
-      <div className="flex-1 flex overflow-hidden relative bg-background-light">
-        
-        {/* === الجزء الأيمن: قائمة المرضى === */}
-        <section className="flex-1 overflow-y-auto p-6">
-           <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col h-full">
-              
-              {/* شريط البحث */}
-              <div className="px-6 py-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-50/50">
-                <h3 className="text-sm font-bold text-primary">سجل المرضى الموحد</h3>
-                <div className="relative w-full sm:w-72">
-                  <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">search</span>
-                  <input 
-                    className="w-full pr-9 pl-4 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-primary transition-all shadow-sm" 
-                    placeholder="بحث بالاسم، الكود، أو الهاتف..." 
-                    type="text" 
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
+      <div className="flex h-[calc(100vh-64px)] overflow-hidden" dir="rtl">
+        {/* قائمة المرضى */}
+        <div className="flex-1 overflow-y-auto p-6 border-r border-slate-200 text-right">
+          <div className="relative mb-6">
+            <input 
+              type="text" 
+              placeholder="بحث بالاسم، رقم الهاتف، أو الرقم القومي..." 
+              className="w-full pr-10 pl-4 py-3 border border-slate-200 rounded-xl outline-none focus:border-primary"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+
+          {loading ? (
+            <div className="text-center py-12 text-slate-400 font-bold">جاري تحديث السجلات...</div>
+          ) : (
+            <div className="space-y-2">
+              {patients.map(patient => (
+                <div 
+                  key={patient.id}
+                  onClick={() => setActivePatient(patient)}
+                  className={`p-4 rounded-2xl cursor-pointer transition-all border ${activePatient?.id === patient.id ? 'bg-blue-50 border-blue-200' : 'hover:bg-slate-50 border-transparent'}`}
+                >
+                  <div className="font-bold text-slate-800">
+                    {patient.full_name || `${patient.first_name} ${patient.last_name}`}
+                  </div>
+                  <div className="text-xs text-slate-500 mt-1 font-mono">
+                    الهاتف: {patient.phone} · كود: {patient.patient_code || patient.id}
+                  </div>
                 </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* تفاصيل المريض */}
+        <div className="w-96 bg-white p-6 overflow-y-auto border-l border-slate-200 text-right">
+          {activePatient ? (
+            <div>
+              <h2 className="text-xl font-black text-slate-900">
+                {activePatient.full_name || `${activePatient.first_name} ${activePatient.last_name}`}
+              </h2>
+              <p className="text-xs text-slate-400 font-mono mt-1">
+                كود النظام: {activePatient.patient_code || activePatient.id}
+              </p>
+
+              <div className="mt-6 space-y-2 text-sm bg-slate-50 p-4 rounded-xl border border-slate-100">
+                <p className="text-slate-600"><strong>النوع:</strong> {activePatient.gender === 'male' ? 'ذكر' : 'أنثى'}</p>
+                <p className="text-slate-600"><strong>تاريخ الميلاد:</strong> <span className="font-mono">{activePatient.date_of_birth}</span></p>
+                {activePatient.national_id && <p className="text-slate-600"><strong>الرقم القومي:</strong> <span className="font-mono">{activePatient.national_id}</span></p>}
+                <p className="text-slate-600"><strong>البريد:</strong> <span className="font-mono">{activePatient.email || '—'}</span></p>
+              </div>
+
+              <div className="mt-8">
+                <h4 className="font-black text-slate-800 mb-3 border-r-4 border-primary pr-2">سجل الزيارات الطبية</h4>
+                {activePatientSamples.length > 0 ? (
+                  activePatientSamples.map(s => (
+                    <div key={s.id} className="bg-slate-50 border border-slate-100 p-4 rounded-xl mb-3">
+                      <div className="text-sm font-black text-primary font-mono">ORD-#{s.id}</div>
+                      <div className="text-xs text-slate-500 mt-1">تاريخ: {s.created_at?.split('T')[0]}</div>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-slate-400 text-xs italic">لا توجد زيارات مسجلة لهذا المريض.</p>
+                )}
+              </div>
+            </div>
+          ) : (
+            <div className="text-center text-slate-300 font-bold mt-20">اختر مريضاً لعرض بياناته</div>
+          )}
+        </div>
+      </div>
+
+      {/* Modal إضافة مريض جديد بعد التأمين التام */}
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+          <div className="bg-white rounded-3xl p-8 w-full max-w-md shadow-2xl text-right animate-in zoom-in duration-200">
+            <h3 className="font-black text-xl mb-6 text-slate-900 border-b pb-3">تسجيل مريض جديد</h3>
+            
+            <form onSubmit={handleAddPatient} className="space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <input type="text" placeholder="الاسم الأول" required className="w-full p-3.5 border rounded-2xl text-sm font-bold" value={formData.first_name} onChange={e => setFormData({...formData, first_name: e.target.value})} />
+                <input type="text" placeholder="اسم العائلة" required className="w-full p-3.5 border rounded-2xl text-sm font-bold" value={formData.last_name} onChange={e => setFormData({...formData, last_name: e.target.value})} />
               </div>
               
-              {/* جدول المرضى */}
-              <div className="flex-1 overflow-y-auto">
-                <table className="w-full text-right relative">
-                  <thead className="bg-slate-50 text-xs text-slate-500 uppercase font-bold border-b border-slate-200 sticky top-0 z-10">
-                    <tr>
-                      <th className="py-4 px-6">المريض</th>
-                      <th className="py-4 px-6 text-center">الكود</th>
-                      <th className="py-4 px-6 text-center">الهاتف</th>
-                      <th className="py-4 px-6 text-center">العمر / الجنس</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {filteredPatients.length > 0 ? (
-                      filteredPatients.map((patient) => (
-                        <tr 
-                          key={patient.id} 
-                          onClick={() => setActivePatient(patient)}
-                          className={`transition-colors cursor-pointer ${activePatient?.id === patient.id ? 'bg-blue-50/50 border-l-4 border-l-primary' : 'hover:bg-slate-50 border-l-4 border-l-transparent'}`}
-                        >
-                          <td className="py-3 px-6">
-                            <div className="flex items-center gap-3">
-                              <div className={`w-10 h-10 rounded-full bg-${patient.statusColor}-100 text-${patient.statusColor}-700 flex items-center justify-center font-bold text-sm shrink-0`}>
-                                {patient.initials || 'م'}
-                              </div>
-                              <div>
-                                <p className="font-bold text-slate-800 text-sm">{patient.name}</p>
-                                <p className="text-[10px] text-slate-400">انضم: {patient.joinDate || 'مؤخراً'}</p>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="py-3 px-6 text-xs font-mono text-slate-500 text-center">{patient.id}</td>
-                          <td className="py-3 px-6 text-xs font-mono text-slate-600 text-center font-bold">{patient.phone || '---'}</td>
-                          <td className="py-3 px-6 text-xs text-slate-600 text-center">{patient.age} / {patient.gender}</td>
-                        </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td colSpan="4" className="py-12 text-center text-slate-400 font-bold text-sm">
-                          لا يوجد مرضى مسجلين بهذا الاسم.
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
+              <div>
+                <label className="block text-[10px] font-bold text-slate-400 mb-1">تاريخ الميلاد</label>
+                <input type="date" required className="w-full p-3.5 border rounded-2xl text-sm font-mono text-left" value={formData.date_of_birth} onChange={e => setFormData({...formData, date_of_birth: e.target.value})} />
               </div>
-           </div>
-        </section>
 
-        {/* === الجزء الأيسر: السجل الطبي الجانبي للمريض النشط === */}
-        <aside className="w-96 bg-white border-r border-slate-200 flex flex-col shrink-0 shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.05)] z-20 transition-all duration-300">
-           {activePatient ? (
-             <>
-               {/* رأس السجل الجانبي */}
-               <div className="p-6 border-b border-slate-100 bg-slate-50/50 flex flex-col items-center text-center">
-                 <div className="w-20 h-20 bg-primary text-white rounded-full flex items-center justify-center text-2xl font-bold mb-3 shadow-lg ring-4 ring-white">
-                   {activePatient.initials || 'م'}
-                 </div>
-                 <h3 className="font-black text-xl text-slate-800">{activePatient.name}</h3>
-                 <p className="text-sm text-primary font-mono font-bold mt-1 bg-blue-50 px-3 py-1 rounded-full">{activePatient.id}</p>
-                 
-                 <div className="flex gap-4 mt-4 text-xs font-bold text-slate-500 w-full justify-center">
-                   <div className="bg-white px-3 py-2 rounded-lg border border-slate-200 shadow-sm w-full">
-                     <span className="block text-[10px] text-slate-400 mb-0.5">الجنس</span>
-                     {activePatient.gender}
-                   </div>
-                   <div className="bg-white px-3 py-2 rounded-lg border border-slate-200 shadow-sm w-full">
-                     <span className="block text-[10px] text-slate-400 mb-0.5">العمر</span>
-                     {activePatient.age} سنة
-                   </div>
-                 </div>
-               </div>
+              <input type="text" maxLength="14" placeholder="الرقم القومي (14 رقم)" required className="w-full p-3.5 border rounded-2xl text-sm font-mono text-left" value={formData.national_id} onChange={e => setFormData({...formData, national_id: e.target.value})} />
+              <input type="tel" maxLength="11" placeholder="رقم الهاتف (11 رقم)" required className="w-full p-3.5 border rounded-2xl text-sm font-mono text-left" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} />
+              <input type="email" placeholder="البريد الإلكتروني (اختياري)" className="w-full p-3.5 border rounded-2xl text-sm font-mono text-left" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} />
+              
+              <div className="grid grid-cols-2 gap-4">
+                <select className="p-3 border rounded-2xl text-sm bg-white font-bold text-slate-600" value={formData.gender} onChange={e => setFormData({...formData, gender: e.target.value})}>
+                  <option value="male">ذكر</option>
+                  <option value="female">أنثى</option>
+                </select>
+                {formData.gender === 'female' && (
+                  <label className="flex items-center gap-2 text-sm select-none font-bold text-slate-600">
+                    <input type="checkbox" checked={formData.is_pregnant} onChange={e => setFormData({...formData, is_pregnant: e.target.checked})} className="rounded text-primary focus:ring-primary" />
+                    حالة حمل؟
+                  </label>
+                )}
+              </div>
 
-               {/* محتوى السجل (الفواتير والعينات) */}
-               <div className="flex-1 overflow-y-auto p-6 space-y-6">
-                 <div>
-                   <h4 className="text-sm font-bold text-primary mb-3 flex items-center gap-2">
-                     <span className="material-symbols-outlined text-sm">history</span> زيارات المريض السابقة
-                   </h4>
-                   
-                   {activePatientSamples.length > 0 ? (
-                     <div className="space-y-3">
-                       {activePatientSamples.map((sample, idx) => (
-                         <div key={idx} className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
-                           {/* خط ملون يوضح حالة الدفع */}
-                           <div className={`absolute top-0 right-0 w-1.5 h-full ${sample.paymentStatus === 'خالص' ? 'bg-emerald-500' : sample.paymentStatus === 'مدفوع جزئياً' ? 'bg-amber-500' : 'bg-red-500'}`}></div>
-                           
-                           <div className="flex justify-between items-start mb-2 pr-2">
-                             <span className="text-xs font-bold font-mono text-slate-800">{sample.id}</span>
-                             <span className="text-[10px] text-slate-400 font-bold">{sample.date}</span>
-                           </div>
-                           
-                           <p className="text-xs text-slate-600 mb-3 pr-2 leading-relaxed">
-                             {sample.tests.map(t => t.name_ar).join('، ')}
-                           </p>
-                           
-                           <div className="flex justify-between items-center pr-2 pt-3 border-t border-slate-100">
-                             <span className={`text-[10px] font-bold px-2 py-1 rounded ${sample.paymentStatus === 'خالص' ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'}`}>
-                               {sample.paymentStatus}
-                             </span>
-                             <span className="text-sm font-black text-primary font-montserrat">{sample.totalCost} ج.م</span>
-                           </div>
-                         </div>
-                       ))}
-                     </div>
-                   ) : (
-                     <div className="text-center py-8 bg-slate-50 rounded-xl border border-slate-200 border-dashed">
-                       <span className="material-symbols-outlined text-slate-300 text-3xl mb-2">inventory_2</span>
-                       <p className="text-xs font-bold text-slate-500">لا توجد زيارات أو تحاليل سابقة.</p>
-                     </div>
-                   )}
-                 </div>
-               </div>
-             </>
-           ) : (
-             <div className="flex-1 flex flex-col items-center justify-center p-8 text-center bg-slate-50/30">
-               <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center shadow-sm border border-slate-100 mb-4 text-slate-300">
-                 <span className="material-symbols-outlined text-4xl">medical_information</span>
-               </div>
-               <h3 className="font-bold text-slate-700">السجل الطبي</h3>
-               <p className="text-xs text-slate-500 mt-2 leading-relaxed">اختر مريضاً من القائمة لعرض تفاصيل ملفه الطبي وتاريخ تحاليله.</p>
-             </div>
-           )}
-        </aside>
-
-        {/* ========================================= */}
-        {/* نافذة (Modal) إضافة مريض جديد */}
-        {/* ========================================= */}
-        {isModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200 border-2 border-primary">
-              <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-primary text-white">
-                <h3 className="font-bold flex items-center gap-2">
-                  <span className="material-symbols-outlined">person_add</span> تسجيل مريض جديد
-                </h3>
-                <button onClick={() => setIsModalOpen(false)} className="text-white/70 hover:text-white transition-colors">
-                  <span className="material-symbols-outlined">close</span>
+              <div className="flex gap-2 pt-4 border-t">
+                <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-3.5 border rounded-2xl font-bold bg-slate-50">إلغاء</button>
+                <button type="submit" disabled={submitting} className="flex-[2] bg-primary text-white py-3.5 rounded-2xl font-black disabled:opacity-50">
+                  {submitting ? 'جاري الحفظ...' : 'حفظ المريض وإصدار الكود'}
                 </button>
               </div>
-
-              <form onSubmit={handleAddPatient} className="p-6 space-y-4 bg-white">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">الاسم الرباعي</label>
-                  <input type="text" required className="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:border-primary outline-none transition-all" placeholder="مثال: أحمد محمد محمود" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} />
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">العمر</label>
-                    <input type="number" required min="1" max="120" className="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:border-primary outline-none transition-all" placeholder="مثال: 35" value={formData.age} onChange={(e) => setFormData({...formData, age: e.target.value})} />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">الجنس</label>
-                    <select className="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:border-primary outline-none transition-all bg-white" value={formData.gender} onChange={(e) => setFormData({...formData, gender: e.target.value})}>
-                      <option value="ذكر">ذكر</option>
-                      <option value="أنثى">أنثى</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">رقم الهاتف المحمول (حساب الدخول)</label>
-                  <input type="tel" required dir="ltr" className="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:border-primary outline-none transition-all text-right" placeholder="010XXXXXXXX" value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} />
-                </div>
-
-                <div className="pt-4 flex items-center justify-end gap-3 border-t border-slate-100 mt-6">
-                  <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 text-sm font-bold text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">إلغاء</button>
-                  <button type="submit" className="px-6 py-2 bg-primary text-white text-sm font-bold rounded-lg hover:bg-slate-800 transition-all shadow-md flex items-center gap-2">
-                    <span className="material-symbols-outlined text-sm">save</span> حفظ وإنشاء الحساب
-                  </button>
-                </div>
-              </form>
-            </div>
+            </form>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </>
   );
 };

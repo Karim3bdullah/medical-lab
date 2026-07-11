@@ -1,46 +1,57 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
+import API from '../services/api';
 
 const LabContext = createContext();
 
 export const LabProvider = ({ children }) => {
   const [settings, setSettings] = useState({
-    labNameAr: 'معامل النخبة',
-    labNameEn: 'Elite Labs',
+    labNameAr: 'مختبرات نكسوس المتكاملة',
+    labNameEn: 'Nexus Diagnostic LIMS',
     address: 'المنصورة، الدقهلية',
-    phone: '01012345678',
-    managerName: 'د. المدير العام',
+    phone: '01000000000',
+    managerName: 'د. المدير الطبي',
+    currency: 'EGP',
+    taxRate: 14,
+    direction: 'rtl'
   });
 
-  const [users, setUsers] = useState([]);
-
   useEffect(() => {
-    // تحميل الإعدادات
-    const savedSettings = localStorage.getItem('medlab_settings');
-    if (savedSettings) setSettings(JSON.parse(savedSettings));
+    const initLabData = async () => {
+      const token = localStorage.getItem('token');
+      if (!token) return;
 
-    // تحميل المستخدمين (مديرين، موظفين، مرضى)
-    const savedUsers = JSON.parse(localStorage.getItem('medlab_users')) || [
-      { id: 'ST-001', email: 'admin@lab.com', password: '123', role: 'Admin', name: 'د. المدير', salary: 0, isBanned: false },
-      { id: 'ST-002', email: 'staff@lab.com', password: '123', role: 'Receptionist', name: 'أحمد الاستقبال', salary: 5000, isBanned: false }
-    ];
-    setUsers(savedUsers);
-    if (!localStorage.getItem('medlab_users')) {
-      localStorage.setItem('medlab_users', JSON.stringify(savedUsers));
-    }
+      try {
+        // الاستعلام من روت الإعدادات الموحد في السيرفر
+        const response = await API.get('/settings');   
+        if (response.data) {
+          const s = response.data;
+          
+          // مطابقة المفاتيح بالملي مع استجابة الباك إند الرسمية الموثقة في البوست مان
+          setSettings({
+            labNameAr: s['lab.name_ar'] || 'مختبرات نكسوس',
+            labNameEn: s['lab.name_en'] || localStorage.getItem('tenantSlug')?.toUpperCase() + ' LIMS' || 'Nexus LIMS',
+            address: s['lab.address'] || 'المنصورة، الدقهلية',
+            phone: s['lab.phone'] || '---',
+            managerName: s['lab.manager_name'] || '---',
+            currency: s['billing.currency'] || 'EGP',
+            taxRate: s['billing.tax_rate'] || 14,
+            direction: s['locale.direction'] || 'rtl',
+          });
+        }
+      } catch (err) {
+        console.warn("فشل جلب إعدادات المعمل من السيرفر - استخدام الافتراضي", err);
+      }
+    };
+
+    initLabData();
   }, []);
 
   const updateSettings = (newSettings) => {
     setSettings(newSettings);
-    localStorage.setItem('medlab_settings', JSON.stringify(newSettings));
-  };
-
-  const updateUsersList = (newList) => {
-    setUsers(newList);
-    localStorage.setItem('medlab_users', JSON.stringify(newList));
   };
 
   return (
-    <LabContext.Provider value={{ settings, updateSettings, users, setUsers: updateUsersList }}>
+    <LabContext.Provider value={{ settings, updateSettings }}>
       {children}
     </LabContext.Provider>
   );

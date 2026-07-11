@@ -1,173 +1,138 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useLab } from '../context/LabContext';
+import API from '../services/api';
 
 const Login = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
   const navigate = useNavigate();
-  const { settings } = useLab();
+  const [formData, setFormData] = useState({
+    tenant_slug: 'ccl', // القيمة الافتراضية المعتمدة في معملك الحالي
+    email: 'doctor@labnet.io', // الإيميل الافتراضي للـ Staff
+    password: 'password' // الباسورد الافتراضي
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  // 1. مصفوفة الحسابات الافتراضية (بما فيها السوبر أدمن والمعامل المختلفة)
-  const defaultUsers = [
-    // السوبر أدمن - المتحكم في المنصة
-    { id: 'SA-001', email: 'master@admin.com', password: 'masterpassword', role: 'super_admin', name: 'المهندس جمال' },
-    
-    // حسابات معمل النخبة (نشط)
-    { id: 'ST-001', email: 'admin@lab.com', password: '123', role: 'Admin', name: 'د. جمال', labId: 'LAB-101' },
-    { id: 'ST-002', email: 'staff@lab.com', password: '123', role: 'Receptionist', name: 'أخصائي الاستقبال', labId: 'LAB-101' },
-    
-    // حسابات معامل محظورة أو منتهية للتجربة
-    { id: 'ST-999', email: 'banned@lab.com', password: '123', role: 'Admin', name: 'مدير معمل محظور', labId: 'LAB-000' },
-    
-    // حساب مريض تيست
-    { id: 'PT-100', email: '01011111111', password: '123', role: 'Patient', name: 'أحمد محمد علي', patientId: 'PT-100', labId: 'LAB-101' }
-  ];
-
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    
-    const savedUsers = JSON.parse(localStorage.getItem('medlab_users')) || [];
-    const allLabs = JSON.parse(localStorage.getItem('platform_labs')) || [];
-    const allUsers = [...defaultUsers, ...savedUsers];
-    
-    const user = allUsers.find(u => 
-      String(u.email).trim() === String(email).trim() && 
-      String(u.password).trim() === String(password).trim()
-    );
+    setLoading(true);
+    setError('');
 
-    if (user) {
-      // فحص الحظر الفردي لليوزر
-      if (user.isBanned) {
-        setError('عفواً، هذا الحساب محظور إدارياً!');
-        return;
-      }
+    try {
+      // 1️⃣ تجهيز الـ Payload بالإيميل والباسورد الأساسيين
+      const payload = {
+        email: formData.email.trim(),
+        password: formData.password
+      };
 
-      // فحص اشتراك المعمل (يتم تخطيه للسوبر أدمن فقط)
-      if (user.role !== 'super_admin') {
-        const myLab = allLabs.find(l => l.id === user.labId);
-        // لو المعمل محظور أو الاشتراك منتهي
-        if (myLab && (myLab.status === 'banned' || new Date(myLab.expiryDate) < new Date())) {
-          navigate('/banned'); 
+      // 2️⃣ التحقق الذكي: لو الحساب مش حساب السوبر أدمن المركزي المشترك، نمرر الـ tenant_slug
+      if (payload.email.toLowerCase() !== 'admin@labnet.io') {
+        if (!formData.tenant_slug.trim()) {
+          setError('برجاء كتابة معرف المعمل (Tenant Slug)');
+          setLoading(false);
           return;
         }
+        payload.tenant_slug = formData.tenant_slug.trim().toLowerCase();
       }
 
-      // حفظ بيانات الجلسة (Session Storage)
-      localStorage.setItem('isAuthenticated', 'true');
-      localStorage.setItem('logged_user', JSON.stringify(user));
-      localStorage.setItem('userRole', user.role);
-      localStorage.setItem('userName', user.name);
-      if (user.labId) localStorage.setItem('currentLabId', user.labId);
-      if (user.patientId) localStorage.setItem('patientId', user.patientId);
+      // 3️⃣ إرسال الريكويست أونلاين للروت الموحد في الباك إند
+      const response = await API.post('/auth/login', payload);
+      const { token, data } = response.data;
 
-      // التوجيه الذكي حسب الصلاحية
-      if (user.role === 'super_admin') {
-        navigate('/master-admin');
-      } else if (user.role === 'Patient') {
-        navigate('/portal');
-      } else {
-        navigate('/');
+      if (token) {
+        // حفظ بيانات الجلسة في الـ LocalStorage
+        localStorage.setItem('token', token);
+        localStorage.setItem('isAuthenticated', 'true');
+        localStorage.setItem('userName', data.name);
+        
+        // قراءة التايب أو الرول بشكل مرن من استجابة السيرفر الحقيقية
+        const loginType = response.data.type || 'staff'; 
+        const role = (data.roles?.[0] || loginType).toLowerCase();
+        localStorage.setItem('userRole', role);
+
+        // 4️⃣ التوجيه الذكي (Routing) الصارم بناءً على بنية كوليكشن الباك إند
+        if (role === 'superadmin' || payload.email.toLowerCase() === 'admin@labnet.io') {
+          localStorage.setItem('userRole', 'superadmin');
+          navigate('/master-admin'); // التوجيه الفوري والوحيد للوحة السوبر أدمن الفوقية الموحدة
+        } else if (role === 'patient') {
+          localStorage.setItem('tenantSlug', payload.tenant_slug || 'ccl');
+          navigate('/portal'); // توجيه المريض إجبارياً وبشكل آمن تماماً لبوابة المرضى
+        } else {
+          localStorage.setItem('tenantSlug', payload.tenant_slug || 'ccl');
+          navigate('/'); // التوجيه لداشبورد المعمل العادية للإداريين والفنيين
+        }
       }
-    } else {
-      setError('البريد الإلكتروني أو كلمة المرور غير صحيحة!');
+    } catch (err) {
+      // عرض رسالة الخطأ الصريحة الراجعة من السيرفر إن وجدت
+      setError(err.response?.data?.message || 'فشل الدخول، تحقق من البيانات ومعرف المعمل');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-12 px-4 font-sans" dir="rtl">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
-        <div className="inline-flex items-center justify-center w-24 h-24 bg-slate-900 rounded-[2.5rem] shadow-2xl text-white mb-6 border-8 border-white">
-          <span className="material-symbols-outlined text-6xl">biotech</span>
-        </div>
-        <h2 className="text-4xl font-black text-slate-900 tracking-tighter italic">
-          {settings.labNameAr || "Nexus LIS"}
-        </h2>
-        <p className="mt-2 text-xs text-slate-400 font-black uppercase tracking-[0.3em]">Smart Laboratory System</p>
-      </div>
+    <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4" dir="rtl">
+      <div className="bg-slate-900 p-8 rounded-[2rem] w-full max-w-sm shadow-2xl border border-slate-800">
+        <h2 className="text-xl font-black text-white text-center mb-2">دخول نظام LabNet</h2>
+        <p className="text-center text-slate-400 text-xs mb-6">برجاء إدخال بيانات الاعتماد الخاصة بمختبرك</p>
+        
+        {error && (
+          <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-3 rounded-xl text-xs text-center mb-4 font-medium">
+            {error}
+          </div>
+        )}
 
-      <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-12 px-10 shadow-[0_35px_60px_-15px_rgba(0,0,0,0.1)] rounded-[3.5rem] border border-white relative overflow-hidden">
+        <form onSubmit={handleLogin} className="space-y-4">
           
-          <form className="space-y-6 relative z-10" onSubmit={handleLogin}>
-            {error && (
-              <div className="bg-red-50 text-red-600 p-4 rounded-2xl text-[11px] font-black border border-red-100 text-center animate-bounce">
-                {error}
-              </div>
-            )}
-
-            <div>
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-4">هوية الدخول / الإيميل</label>
-              <input
-                type="text" required
-                className="w-full bg-slate-50 border-2 border-transparent rounded-2xl py-4 px-6 text-sm font-bold focus:bg-white focus:border-primary outline-none transition-all shadow-inner"
-                placeholder="master@admin.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </div>
-
-            <div>
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-4">كلمة المرور</label>
-              <input
-                type="password" required
-                className="w-full bg-slate-50 border-2 border-transparent rounded-2xl py-4 px-6 text-sm font-bold focus:bg-white focus:border-primary outline-none transition-all shadow-inner"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
-
-            <button type="submit" className="w-full py-5 bg-slate-900 text-white rounded-2xl font-black text-sm shadow-2xl hover:bg-primary transition-all flex items-center justify-center gap-3 active:scale-95 group">
-              تسجيل الدخول للنظام <span className="material-symbols-outlined text-lg group-hover:translate-x-[-5px] transition-transform">login</span>
-            </button>
-          </form>
-
-          {/* تلميحات دخول الأنظمة المختلفة (Test Data) */}
-          <div className="mt-10 pt-8 border-t border-slate-100 space-y-3">
-              <p className="text-[10px] font-black text-slate-300 text-center uppercase tracking-[0.3em] mb-4 italic">اختبار صلاحيات النظام</p>
-              
-              <div className="grid grid-cols-1 gap-2">
-                  {/* 1. السوبر أدمن */}
-                  <div className="flex justify-between items-center bg-slate-900 text-white p-3 rounded-2xl border border-slate-800 shadow-lg group hover:bg-indigo-900 transition-colors cursor-pointer">
-                      <div className="flex flex-col">
-                          <span className="text-[9px] font-black text-indigo-400 uppercase">Super Admin (المنصة)</span>
-                          <span className="text-[10px] font-bold">master@admin.com</span>
-                      </div>
-                      <span className="text-[10px] font-black bg-white/10 px-2 py-1 rounded-lg font-mono">masterpassword</span>
-                  </div>
-
-                  {/* 2. مدير معمل */}
-                  <div className="flex justify-between items-center bg-blue-50 p-3 rounded-2xl border border-blue-100 hover:border-blue-300 transition-colors cursor-pointer">
-                      <div className="flex flex-col">
-                          <span className="text-[9px] font-black text-blue-600 uppercase tracking-tighter">Lab Admin (نشط)</span>
-                          <span className="text-[10px] font-bold text-slate-700">admin@lab.com</span>
-                      </div>
-                      <span className="text-[10px] font-black text-blue-600 font-mono italic">123</span>
-                  </div>
-
-                  {/* 3. معمل محظور */}
-                  <div className="flex justify-between items-center bg-red-50 p-3 rounded-2xl border border-red-100 hover:border-red-300 transition-colors cursor-pointer">
-                      <div className="flex flex-col">
-                          <span className="text-[9px] font-black text-red-600 uppercase tracking-tighter">Expired/Banned (محظور)</span>
-                          <span className="text-[10px] font-bold text-slate-700">banned@lab.com</span>
-                      </div>
-                      <span className="text-[10px] font-black text-red-600 font-mono italic">123</span>
-                  </div>
-
-                  {/* 4. مريض */}
-                  <div className="flex justify-between items-center bg-emerald-50 p-3 rounded-2xl border border-emerald-100 hover:border-emerald-300 transition-colors cursor-pointer">
-                      <div className="flex flex-col">
-                          <span className="text-[9px] font-black text-emerald-600 uppercase tracking-tighter">Patient Portal (مريض)</span>
-                          <span className="text-[10px] font-bold text-slate-700">01011111111</span>
-                      </div>
-                      <span className="text-[10px] font-black text-emerald-600 font-mono italic">123</span>
-                  </div>
-              </div>
+          {/* خانة معرف المعمل (Tenant Slug) */}
+          <div>
+            <label className="text-slate-400 text-xs font-bold block mb-1 pr-1">معرف المعمل (Tenant Slug)</label>
+            <input 
+              type="text" 
+              placeholder="مثال: ccl أو citylab" 
+              className="w-full p-3 rounded-xl bg-slate-800 text-white outline-none focus:ring-2 focus:ring-indigo-500 text-left font-mono transition-all" 
+              value={formData.tenant_slug} 
+              onChange={e => setFormData({...formData, tenant_slug: e.target.value})}
+              dir="ltr"
+            />
           </div>
 
-        </div>
+          {/* خانة البريد الإلكتروني */}
+          <div>
+            <label className="text-slate-400 text-xs font-bold block mb-1 pr-1">البريد الإلكتروني</label>
+            <input 
+              type="email" 
+              placeholder="admin@example.com"
+              className="w-full p-3 rounded-xl bg-slate-800 text-white outline-none focus:ring-2 focus:ring-indigo-500 text-left transition-all" 
+              value={formData.email} 
+              onChange={e => setFormData({...formData, email: e.target.value})} 
+              required
+              dir="ltr"
+            />
+          </div>
+
+          {/* خانة كلمة المرور */}
+          <div>
+            <label className="text-slate-400 text-xs font-bold block mb-1 pr-1">كلمة المرور</label>
+            <input 
+              type="password" 
+              placeholder="••••••••"
+              className="w-full p-3 rounded-xl bg-slate-800 text-white outline-none focus:ring-2 focus:ring-indigo-500 text-left transition-all" 
+              value={formData.password} 
+              onChange={e => setFormData({...formData, password: e.target.value})} 
+              required
+              dir="ltr"
+            />
+          </div>
+
+          {/* زر تسجيل الدخول */}
+          <button 
+            type="submit" 
+            disabled={loading} 
+            className="w-full py-3 mt-2 bg-indigo-600 text-white rounded-xl font-bold disabled:opacity-50 transition-all hover:bg-indigo-700 active:scale-[0.98]"
+          >
+            {loading ? 'جاري التحقق من البيانات...' : 'تسجيل الدخول'}
+          </button>
+        </form>
       </div>
     </div>
   );

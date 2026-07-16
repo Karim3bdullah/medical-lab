@@ -1,0 +1,132 @@
+/* ==========================================================================
+   🖋️ Fonts & Icons - Loaded Properly
+   ========================================================================== */
+
+/* ----- Tajawal (Arabic) ----- */
+@font-face {
+  font-family: 'Tajawal';
+  src: url('/assets/fonts/Tajawal-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Tajawal';
+  src: url('/assets/fonts/Tajawal-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Tajawal';
+  src: url('/assets/fonts/Tajawal-Black.ttf') format('truetype');
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ----- Montserrat (Numbers & English) ----- */
+@font-face {
+  font-family: 'Montserrat';
+  src: url('/assets/fonts/Montserrat-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Montserrat';
+  src: url('/assets/fonts/Montserrat-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ----- Material Symbols Outlined (Icons) ----- */
+@font-face {
+  font-family: 'Material Symbols Outlined';
+  src: url('/assets/fonts/material-symbols-outlined.woff2') format('woff2');
+  font-weight: 100 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ==========================================================================
+   🔤 Font Variables
+   ========================================================================== */
+
+:root {
+  --font-tajawal: 'Tajawal', system-ui, -apple-system, sans-serif;
+  --font-montserrat: 'Montserrat', 'Segoe UI', sans-serif;
+  --font-icons: 'Material Symbols Outlined';
+}
+
+/* ==========================================================================
+   📱 Font Classes
+   ========================================================================== */
+
+/* Arabic Text */
+.font-arabic {
+  font-family: var(--font-tajawal);
+}
+
+/* Numbers & English */
+.font-latin {
+  font-family: var(--font-montserrat);
+}
+
+/* Icons */
+.font-icons {
+  font-family: var(--font-icons);
+  font-weight: normal;
+  font-style: normal;
+  display: inline-block;
+  line-height: 1;
+  text-transform: none;
+  letter-spacing: normal;
+  word-wrap: normal;
+  white-space: nowrap;
+  direction: ltr;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* ----- Icon Sizes ----- */
+.icon-xs {
+  font-size: 16px;
+}
+.icon-sm {
+  font-size: 20px;
+}
+.icon-md {
+  font-size: 24px;
+}
+.icon-lg {
+  font-size: 32px;
+}
+.icon-xl {
+  font-size: 40px;
+}
+.icon-2xl {
+  font-size: 48px;
+}
+
+/* ----- Icon Variants ----- */
+.icon-filled {
+  font-variation-settings: 'FILL' 1;
+}
+
+.icon-outlined {
+  font-variation-settings: 'FILL' 0;
+}
+
+.icon-rounded {
+  font-variation-settings: 'ROND' 1;
+}
+
+.icon-sharp {
+  font-variation-settings: 'sharp' 1;
+}

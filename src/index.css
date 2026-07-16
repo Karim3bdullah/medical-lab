@@ -1,0 +1,670 @@
+/* ==========================================================================
+   🎯 Tailwind + Theme
+   ========================================================================== */
+
+@import 'tailwindcss';
+
+@theme {
+  --color-primary: #0f1729;
+  --color-primary-light: #1e293b;
+  --color-primary-dark: #0b1120;
+  --color-accent: #2563eb;
+  --color-accent-light: #3b82f6;
+  --color-accent-dark: #1d4ed8;
+  --color-success: #10b981;
+  --color-danger: #ef4444;
+  --color-warning: #f59e0b;
+  --color-info: #3b82f6;
+
+  --font-tajawal: 'Tajawal', system-ui, -apple-system, sans-serif;
+  --font-montserrat: 'Montserrat', 'Segoe UI', sans-serif;
+  --font-icons: 'Material Symbols Outlined';
+}
+
+/* ==========================================================================
+   🌍 Global Styles
+   ========================================================================== */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  font-family: var(--font-tajawal);
+  background-color: #f8fafc;
+  color: #0f172a;
+  min-height: 100vh;
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ==========================================================================
+   🗓️ FullCalendar Override
+   ========================================================================== */
+
+/* ✅ FullCalendar Reset - يطبق على الـ Calendar بس */
+.fc,
+.fc *,
+.fc *::before,
+.fc *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* ✅ إعادة الـ Padding للمحتوى الداخلي للـ Calendar */
+.fc-daygrid-day {
+  padding: 2px !important;
+}
+
+.fc-daygrid-day-number {
+  padding: 4px !important;
+}
+
+.fc-daygrid-day-events {
+  padding: 2px 4px !important;
+}
+
+.fc-col-header-cell-cushion {
+  padding: 6px 8px !important;
+}
+
+.fc-daygrid-day-frame {
+  padding: 2px !important;
+}
+
+.fc-daygrid-block-event {
+  padding: 2px 4px !important;
+}
+
+/* ==========================================================================
+   🔤 Icons - Material Symbols
+   ========================================================================== */
+
+.material-symbols-outlined {
+  font-family: var(--font-icons) !important;
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: 'liga';
+}
+
+/* Icon Sizes */
+.icon-16 {
+  font-size: 16px;
+}
+.icon-20 {
+  font-size: 20px;
+}
+.icon-24 {
+  font-size: 24px;
+}
+.icon-32 {
+  font-size: 32px;
+}
+.icon-40 {
+  font-size: 40px;
+}
+.icon-48 {
+  font-size: 48px;
+}
+.icon-56 {
+  font-size: 56px;
+}
+.icon-64 {
+  font-size: 64px;
+}
+
+/* Icon Variants */
+.icon-filled {
+  font-variation-settings: 'FILL' 1;
+}
+.icon-outlined {
+  font-variation-settings: 'FILL' 0;
+}
+.icon-rounded {
+  font-variation-settings: 'ROND' 1;
+}
+.icon-sharp {
+  font-variation-settings: 'sharp' 1;
+}
+
+/* ==========================================================================
+   🧩 Utility Classes
+   ========================================================================== */
+
+@layer utilities {
+  /* ----- Cards ----- */
+  .lims-card {
+    @apply bg-white border border-slate-200 rounded-2xl shadow-sm p-4 md:p-6 transition-all duration-200;
+  }
+
+  .lims-card:hover {
+    @apply shadow-md;
+  }
+
+  .lims-card-dark {
+    @apply bg-slate-900 border border-slate-800 rounded-2xl shadow-sm p-4 md:p-6 text-white;
+  }
+
+  /* ----- Inputs ----- */
+  .lims-input {
+    @apply w-full px-3 py-2.5 md:px-4 md:py-3 
+           bg-white border border-slate-200 rounded-xl 
+           focus:border-primary focus:ring-2 focus:ring-primary/20 
+           outline-none text-sm font-bold transition-all duration-200;
+  }
+
+  .lims-input:disabled {
+    @apply opacity-50 cursor-not-allowed bg-slate-50;
+  }
+
+  .lims-input-error {
+    @apply border-red-500 focus:border-red-500 focus:ring-red-500/20;
+  }
+
+  /* ----- Buttons ----- */
+  .btn-primary {
+    @apply px-4 py-2.5 md:px-6 md:py-3 
+           bg-primary text-white font-black rounded-xl 
+           hover:bg-primary-light active:scale-95 
+           transition-all duration-200 text-xs md:text-sm 
+           shadow-sm inline-flex items-center justify-center gap-2;
+  }
+
+  .btn-primary:disabled {
+    @apply opacity-50 cursor-not-allowed hover:bg-primary;
+  }
+
+  .btn-secondary {
+    @apply px-4 py-2.5 md:px-6 md:py-3 
+           bg-slate-200 text-slate-700 font-black rounded-xl 
+           hover:bg-slate-300 active:scale-95 
+           transition-all duration-200 text-xs md:text-sm 
+           inline-flex items-center justify-center gap-2;
+  }
+
+  .btn-danger {
+    @apply px-4 py-2.5 md:px-6 md:py-3 
+           bg-red-600 text-white font-black rounded-xl 
+           hover:bg-red-700 active:scale-95 
+           transition-all duration-200 text-xs md:text-sm 
+           shadow-sm inline-flex items-center justify-center gap-2;
+  }
+
+  .btn-danger:disabled {
+    @apply opacity-50 cursor-not-allowed hover:bg-red-600;
+  }
+
+  .btn-success {
+    @apply px-4 py-2.5 md:px-6 md:py-3 
+           bg-emerald-600 text-white font-black rounded-xl 
+           hover:bg-emerald-700 active:scale-95 
+           transition-all duration-200 text-xs md:text-sm 
+           shadow-sm inline-flex items-center justify-center gap-2;
+  }
+
+  .btn-success:disabled {
+    @apply opacity-50 cursor-not-allowed hover:bg-emerald-600;
+  }
+
+  .btn-warning {
+    @apply px-4 py-2.5 md:px-6 md:py-3 
+           bg-amber-600 text-white font-black rounded-xl 
+           hover:bg-amber-700 active:scale-95 
+           transition-all duration-200 text-xs md:text-sm 
+           shadow-sm inline-flex items-center justify-center gap-2;
+  }
+
+  .btn-outline {
+    @apply px-4 py-2.5 md:px-6 md:py-3 
+           bg-transparent border-2 border-primary text-primary 
+           font-black rounded-xl hover:bg-primary hover:text-white 
+           active:scale-95 transition-all duration-200 text-xs md:text-sm 
+           inline-flex items-center justify-center gap-2;
+  }
+
+  .btn-ghost {
+    @apply px-3 py-2 md:px-4 md:py-2.5 
+           bg-transparent text-slate-600 font-black rounded-xl 
+           hover:bg-slate-100 active:scale-95 
+           transition-all duration-200 text-xs md:text-sm 
+           inline-flex items-center justify-center gap-2;
+  }
+
+  /* ----- Badges ----- */
+  .badge {
+    @apply px-2 py-0.5 rounded-lg text-[10px] font-black border;
+  }
+
+  .badge-active {
+    @apply bg-emerald-50 text-emerald-700 border-emerald-200;
+  }
+
+  .badge-banned {
+    @apply bg-red-50 text-red-700 border-red-200;
+  }
+
+  .badge-expired {
+    @apply bg-amber-50 text-amber-700 border-amber-200;
+  }
+
+  .badge-expiring {
+    @apply bg-orange-50 text-orange-700 border-orange-200;
+  }
+
+  .badge-pending {
+    @apply bg-blue-50 text-blue-700 border-blue-200;
+  }
+
+  .badge-success {
+    @apply bg-emerald-50 text-emerald-700 border-emerald-200;
+  }
+
+  .badge-danger {
+    @apply bg-red-50 text-red-700 border-red-200;
+  }
+
+  .badge-warning {
+    @apply bg-amber-50 text-amber-700 border-amber-200;
+  }
+
+  /* ----- Scrollbar ----- */
+  .custom-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 transparent;
+  }
+
+  .custom-scroll::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+
+  .custom-scroll::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .custom-scroll::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 20px;
+  }
+
+  .custom-scroll::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+  }
+
+  /* ----- Animations ----- */
+  @keyframes scan {
+    0% {
+      top: -2px;
+      opacity: 0;
+    }
+    10% {
+      opacity: 1;
+    }
+    90% {
+      opacity: 1;
+    }
+    100% {
+      top: 100%;
+      opacity: 0;
+    }
+  }
+
+  @keyframes pulse-soft {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.5;
+    }
+  }
+
+  @keyframes slide-in-right {
+    0% {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+    100% {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes slide-in-bottom {
+    0% {
+      transform: translateY(20px);
+      opacity: 0;
+    }
+    100% {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes fade-in {
+    0% {
+      opacity: 0;
+    }
+    100% {
+      opacity: 1;
+    }
+  }
+
+  @keyframes zoom-in {
+    0% {
+      transform: scale(0.95);
+      opacity: 0;
+    }
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+
+  .animate-scan {
+    animation: scan 2.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  }
+
+  .animate-pulse-soft {
+    animation: pulse-soft 2s ease-in-out infinite;
+  }
+
+  .animate-slide-in-right {
+    animation: slide-in-right 0.3s ease-out;
+  }
+
+  .animate-slide-in-bottom {
+    animation: slide-in-bottom 0.3s ease-out;
+  }
+
+  .animate-fade-in {
+    animation: fade-in 0.3s ease-out;
+  }
+
+  .animate-zoom-in {
+    animation: zoom-in 0.2s ease-out;
+  }
+
+  /* ----- Glass Effect ----- */
+  .glass {
+    @apply bg-white/80 backdrop-blur-md border border-white/20;
+  }
+
+  .glass-dark {
+    @apply bg-slate-900/80 backdrop-blur-md border border-slate-800/50;
+  }
+
+  /* ----- Responsive Utilities ----- */
+  .container-responsive {
+    @apply w-full max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8;
+  }
+
+  .hide-scrollbar {
+    scrollbar-width: none;
+  }
+
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* ----- Text Utilities ----- */
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  /* ----- Grid Utilities ----- */
+  .grid-responsive {
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4 lg:gap-6;
+  }
+
+  .grid-responsive-2 {
+    @apply grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6;
+  }
+
+  /* ----- Table Utilities ----- */
+  .table-responsive {
+    @apply overflow-x-auto -mx-3 sm:mx-0;
+  }
+
+  .table-responsive table {
+    @apply min-w-[600px] md:min-w-full;
+  }
+
+  /* ----- Container Main ----- */
+  .container-main {
+    @apply w-full max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8;
+  }
+
+  /* ----- Card Padding ----- */
+  .card-padding {
+    @apply p-3 sm:p-4 md:p-5 lg:p-6;
+  }
+
+  /* ----- Gap Responsive ----- */
+  .gap-responsive {
+    @apply gap-2 sm:gap-3 md:gap-4 lg:gap-6;
+  }
+}
+
+/* ==========================================================================
+   🖨️ Print Styles
+   ========================================================================== */
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  body {
+    background-color: white !important;
+  }
+
+  .lims-card {
+    box-shadow: none !important;
+    border: 1px solid #e2e8f0 !important;
+  }
+
+  .lims-card:hover {
+    box-shadow: none !important;
+  }
+}
+
+/* ==========================================================================
+   📱 Responsive Tweaks
+   ========================================================================== */
+
+/* Mobile First - كل حاجة مظبوطة على الموبايل */
+
+/* Small screens (phones) */
+@media (max-width: 640px) {
+  .lims-card {
+    @apply p-3;
+  }
+
+  .btn-primary,
+  .btn-danger,
+  .btn-success,
+  .btn-secondary,
+  .btn-warning,
+  .btn-outline {
+    @apply px-3 py-2 text-xs;
+  }
+
+  .material-symbols-outlined {
+    font-size: 20px;
+  }
+}
+
+/* Tablets and up */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .lims-card {
+    @apply p-5;
+  }
+}
+
+/* Laptops and up */
+@media (min-width: 1025px) {
+  .lims-card {
+    @apply p-6;
+  }
+}
+
+/* Large screens */
+@media (min-width: 1440px) {
+  .container-responsive {
+    @apply px-12;
+  }
+}
+
+/* ==========================================================================
+   🎨 Custom Overrides
+   ========================================================================== */
+
+/* SweetAlert2 Customization */
+.swal2-popup {
+  font-family: var(--font-tajawal) !important;
+  direction: rtl !important;
+  text-align: right !important;
+  border-radius: 28px !important;
+}
+
+.swal2-title {
+  font-weight: 900 !important;
+  font-size: 1.1rem !important;
+  font-family: var(--font-tajawal) !important;
+}
+
+.swal2-html-container {
+  font-size: 0.85rem !important;
+  font-weight: 700 !important;
+  font-family: var(--font-tajawal) !important;
+}
+
+.swal2-confirm,
+.swal2-cancel {
+  font-weight: 900 !important;
+  border-radius: 14px !important;
+  padding: 10px 28px !important;
+  font-size: 0.8rem !important;
+  font-family: var(--font-tajawal) !important;
+}
+
+/* Toast Container */
+.toast-container {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;
+  width: 90%;
+  max-width: 500px;
+  pointer-events: none;
+}
+
+.toast-item {
+  pointer-events: auto;
+  width: 100%;
+  padding: 14px 20px;
+  border-radius: 16px;
+  font-weight: 900;
+  font-size: 0.85rem;
+  font-family: var(--font-tajawal);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+  animation: slide-in-bottom 0.3s ease-out;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid transparent;
+}
+
+.toast-success {
+  background: #ecfdf5;
+  border-color: #6ee7b7;
+  color: #065f46;
+}
+
+.toast-error {
+  background: #fef2f2;
+  border-color: #fca5a5;
+  color: #991b1b;
+}
+
+.toast-warning {
+  background: #fffbeb;
+  border-color: #fcd34d;
+  color: #92400e;
+}
+
+.toast-info {
+  background: #eff6ff;
+  border-color: #93c5fd;
+  color: #1e40af;
+}
+
+/* Dark mode support for toasts */
+@media (prefers-color-scheme: dark) {
+  .toast-success {
+    background: #064e3b;
+    border-color: #10b981;
+    color: #6ee7b7;
+  }
+
+  .toast-error {
+    background: #7f1d1d;
+    border-color: #ef4444;
+    color: #fca5a5;
+  }
+
+  .toast-warning {
+    background: #78350f;
+    border-color: #f59e0b;
+    color: #fcd34d;
+  }
+
+  .toast-info {
+    background: #1e3a5f;
+    border-color: #3b82f6;
+    color: #93c5fd;
+  }
+}
+
+/* ==========================================================================
+   🔧 RTL / LTR Support
+   ========================================================================== */
+
+[dir="rtl"] {
+  text-align: right;
+}
+
+[dir="ltr"] {
+  text-align: left;
+}

@@ -1,0 +1,3115 @@
+{
+  "lab_categories": [
+    {
+      "id": 1,
+      "slug": "clinical_chemistry",
+      "category_en": "Clinical Chemistry",
+      "category_ar": "الكيمياء الإكلينيكية",
+      "tests_count": 32,
+      "test_groups_count": 8
+    },
+    {
+      "id": 2,
+      "slug": "hematology",
+      "category_en": "Hematology",
+      "category_ar": "علم الدم",
+      "tests_count": 14,
+      "test_groups_count": 3
+    },
+    {
+      "id": 3,
+      "slug": "hormones_vitamins",
+      "category_en": "Hormones & Vitamins",
+      "category_ar": "الهرمونات والفيتامينات",
+      "tests_count": 16,
+      "test_groups_count": 5
+    },
+    {
+      "id": 4,
+      "slug": "immunology_serology",
+      "category_en": "Immunology & Serology",
+      "category_ar": "المناعة والأمصال",
+      "tests_count": 12,
+      "test_groups_count": 3
+    },
+    {
+      "id": 5,
+      "slug": "specialized_immunology_autoimmune",
+      "category_en": "Specialized Immunology & Autoimmune",
+      "category_ar": "المناعة المتخصصة والذاتية",
+      "tests_count": 6,
+      "test_groups_count": 2
+    },
+    {
+      "id": 6,
+      "slug": "tumor_markers",
+      "category_en": "Tumor Markers",
+      "category_ar": "دلالات الأورام",
+      "tests_count": 6,
+      "test_groups_count": 3
+    },
+    {
+      "id": 7,
+      "slug": "microbiology_cultures",
+      "category_en": "Microbiology & Cultures",
+      "category_ar": "المزارع والميكروبيولوجيا",
+      "tests_count": 4,
+      "test_groups_count": 1
+    },
+    {
+      "id": 8,
+      "slug": "body_fluids_parasitology",
+      "category_en": "Body Fluids & Parasitology",
+      "category_ar": "سوائل الجسم والطفيليات",
+      "tests_count": 6,
+      "test_groups_count": 2
+    },
+    {
+      "id": 9,
+      "slug": "toxicology_tdm",
+      "category_en": "Toxicology & TDM",
+      "category_ar": "السموم ومراقبة الأدوية",
+      "tests_count": 5,
+      "test_groups_count": 2
+    },
+    {
+      "id": 10,
+      "slug": "molecular_biology_pcr",
+      "category_en": "Molecular Biology & PCR",
+      "category_ar": "البيولوجيا الجزيئية والـ PCR",
+      "tests_count": 3,
+      "test_groups_count": 1
+    }
+  ],
+  "lab_tests": [
+    {
+      "id": "fbs_001",
+      "category_id": 1,
+      "category_slug": "clinical_chemistry",
+      "name_en": "Fasting Blood Sugar (FBS)",
+      "name_ar": "سكر صائم",
+      "preparation": {
+        "fasting_required": true,
+        "fasting_hours": 8,
+        "instructions_ar": "يجب الصيام من 8 إلى 12 ساعة. يسمح بشرب الماء فقط.",
+        "instructions_en": "Fast for 8-12 hours. Only water is allowed."
+      },
+      "reference_ranges": [
+        {
+          "age_group": "Adult",
+          "gender": "Both",
+          "min_value": 70,
+          "max_value": 99,
+          "unit": "mg/dL"
+        }
+      ]
+    },
+    {
+      "id": "ppbs_002",
+      "category_id": 1,
+      "category_slug": "clinical_chemistry",
+      "name_en": "Post-Prandial Blood Sugar (PPBS)",
+      "name_ar": "سكر فاطر",
+      "preparation": {
+        "fasting_required": false,
+        "instructions_ar": "يتم إجراء التحليل بعد ساعتين بالضبط من بدء تناول وجبة الغداء.",
+        "instructions_en": "Test performed exactly 2 hours after starting lunch."
+      },
+      "reference_ranges": [
+        {
+          "age_group": "Adult",
+          "gender": "Both",
+          "min_value": 70,
+          "max_value": 140,
+          "unit": "mg/dL"
+        }
+      ]
+    },
+    {
+      "id": "rbs_003",
+      "category_id": 1,
+      "category_slug": "clinical_chemistry",
+      "name_en": "Random Blood Sugar (RBS)",
+      "name_ar": "سكر عشوائي",
+      "preparation": {
+        "fasting_required": false,
+        "instructions_ar": "لا يشترط أي تحضيرات، يمكن إجراؤه في أي وقت.",
+        "instructions_en": "No preparations required, can be done at any time."
+      },
+      "reference_ranges": [
+        {
+          "age_group": "Adult",
+          "gender": "Both",
+          "min_value": 70,
+          "max_value": 200,
+          "unit": "mg/dL"
+        }
+      ]
+    },
+    {
+      "id": "hba1c_004",
+      "category_id": 1,
+      "category_slug": "clinical_chemistry",
+      "name_en": "HbA1c",
+      "name_ar": "السكر التراكمي",
+      "preparation": {
+        "fasting_required": false,
+        "instructions_ar": "لا يشترط الصيام، يقيس معدل السكر في آخر 3 شهور.",
+        "instructions_en": "Fasting not required, measures average sugar over the last 3 months."
+      },
+      "reference_ranges": [
+        {
+          "age_group": "Adult",
+          "gender": "Both",
+          "min_value": 4.0,
+          "max_value": 5.6,
+          "unit": "%"
+        }
+      ]
+    },
+    {
+      "id": "alt_005",
+      "category_id": 1,
+      "category_slug": "clinical_chemistry",
+      "name_en": "ALT (SGPT)",
+      "name_ar": "إنزيم كبد ALT",
+      "preparation": {
+        "fasting_required": false,
+        "instructions_ar": "لا يشترط الصيام، ويفضل تجنب المجهود البدني العنيف قبل التحليل.",
+        "instructions_en": "Fasting not required, avoid heavy physical exercise before the test."
+      },
+      "reference_ranges": [
+        {
+          "gender": "Male",
+          "min_value": 0,
+          "max_value": 41,
+          "unit": "U/L"
+        },
+        {
+          "gender": "Female",
+          "min_value": 0,
+          "max_value": 33,
+          "unit": "U/L"
+        }
+      ]
+    },
+    {
+      "id": "ast_006",
+      "category_id": 1,
+      "category_slug": "clinical_chemistry",
+      "name_en": "AST (SGOT)",
+      "name_ar": "إنزيم كبد AST",
+      "preparation": {
+        "fasting_required": false,
+        "instructions_ar": "لا يشترط الصيام، يفضل إبلاغ المعمل في حالة تناول أدوية معينة.",
+        "instructions_en": "Fasting not required, inform the lab if taking specific medications."
+      },
+      "reference_ranges": [
+        {
+          "gender": "Male",
+          "min_value": 0,
+          "max_value": 40,
+          "unit": "U/L"
+        },
+        {
+          "gender": "Female",
+          "min_value": 0,
+          "max_value": 32,
+          "unit": "U/L"
+        }
+      ]
+    },
+    {
+      "id": "alp_007",
+      "category_id": 1,
+      "category_slug": "clinical_chemistry",
+      "name_en": "Alkaline Phosphatase (ALP)",
+      "name_ar": "إنزيم الفوسفاتيز القلوي",
+      "preparation": {
+        "fasting_required": true,
+        "fasting_hours": 8,
+        "instructions_ar": "يفضل الصيام لثماني ساعات لضمان دقة النتائج خاصة لمرضى المرارة.",
+        "instructions_en": "Preferably fast for 8 hours for accurate results, especially for gallbladder patients."
+      },
+      "reference_ranges": [
+        {
+          "age_group": "Adult",
+          "min_value": 44,
+          "max_value": 147,
+          "unit": "U/L"
+        },
+        {
+          "age_group": "Child",
+          "min_value": 100,
+          "max_value": 350,
+          "unit": "U/L"
+        }
+      ]
+    },
+    {
+      "id": "ggt_008",
+      "category_id": 1,
+      "category_slug": "clinical_chemistry",
+      "name_en": "GGT",
+      "name_ar": "إنزيم GGT",
+      "preparation": {
+        "fasting_required": true,
+        "fasting_hours": 8,
+        "instructions_ar": "يفضل الصيام، ويجب الامتناع عن الكحول تماماً قبل التحليل بـ 24 ساعة.",
+        "instructions_en": "Preferably fast, strictly avoid alcohol for 24 hours before the test."
+      },
+      "reference_ranges": [
+        {
+          "age_group": "Adult",
+          "min_value": 0,
+          "max_value": 60,
+          "unit": "U/L"
+        }
+      ]
+    },
+    {
+      "id": "bil_t_009",
+      "category_id": 1,
+      "category_slug": "clinical_chemistry",
+      "name_en": "Total Bilirubin",
+      "name_ar": "الصفراء الكلية",
+      "preparation": {
+        "fasting_required": false,
+        "instructions_ar": "لا يشترط الصيام، تجنب التعرض للضوء الشديد للعينة.",
+        "instructions_en": "Fasting not required, avoid exposing the sample to strong light."
+      },
+      "reference_ranges": [
+        {
+          "age_group": "Adult",
+          "min_value": 0.1,
+          "max_value": 1.2,
+          "unit": "mg/dL"
+        }
+      ]
+    },
+    {
+      "id": "bil_d_010",
+      "category_id": 1,
+      "category_slug": "clinical_chemistry",
+      "name_en": "Direct Bilirubin",
+      "name_ar": "الصفراء المباشرة",
+      "preparation": {
+        "fasting_required": false,
+        "instructions_ar": "لا يشترط الصيام.",
+        "instructions_en": "Fasting not required."
+      },
+      "reference_ranges": [
+        {
+          "age_group": "Adult",
+          "min_value": 0,
+          "max_value": 0.3,
+          "unit": "mg/dL"
+        }
+      ]
+    },
+    {
+      "id": "alb_011",
+      "category_id": 1,
+      "category_slug": "clinical_chemistry",
+      "name_en": "Albumin",
+      "name_ar": "الألبومين",
+      "preparation": {
+        "fasting_required": false,
+        "instructions_ar": "لا يشترط الصيام، تجنب الرباط الضاغط (Torniquet) لفترة طويلة أثناء السحب.",
+        "instructions_en": "Fasting not required, avoid prolonged tourniquet application during sampling."
+      },
+      "reference_ranges": [
+        {
+          "age_group": "Adult",
+          "min_value": 3.4,
+          "max_value": 5.4,
+          "unit": "g/dL"
+        }
+      ]
+    },
+    {
+      "id": "tp_012",
+      "category_id": 1,
+      "category_slug": "clinical_chemistry",
+      "name_en": "Total Protein",
+      "name_ar": "البروتين الكلي",
+      "preparation": {
+        "fasting_required": false,
+        "instructions_ar": "لا يشترط الصيام.",
+        "instructions_en": "Fasting not required."
+      },
+      "reference_ranges": [
+        {
+          "age_group": "Adult",
+          "min_value": 6.4,
+          "max_value": 8.3,
+          "unit": "g/dL"
+        }
+      ]
+    },
+    {
+      "id": "urea_013",
+      "category_id": 1,
+      "category_slug": "clinical_chemistry",
+      "name_en": "Blood Urea",
+      "name_ar": "البولين",
+      "preparation": {
+        "fasting_required": false,
+        "instructions_ar": "لا يشترط الصيام، ويفضل تقليل تناول اللحوم الحمراء قبل التحليل بـ 24 ساعة.",
+        "instructions_en": "Fasting not required, preferably reduce red meat intake 24 hours before the test."
+      },
+      "reference_ranges": [
+        {
+          "age_group": "Adult",
+          "min_value": 10,
+          "max_value": 50,
+          "unit": "mg/dL"
+        }
+      ]
+    },
+    {
+      "id": "creat_014",
+      "category_id": 1,
+      "category_slug": "clinical_chemistry",
+      "name_en": "Creatinine",
+      "name_ar": "الكرياتينين",
+      "preparation": {
+        "fasting_required": false,
+        "instructions_ar": "لا يشترط الصيام، تجنب التمارين الشاقة قبل التحليل.",
+        "instructions_en": "Fasting not required, avoid strenuous exercise before the test."
+      },
+      "reference_ranges": [
+        {
+          "gender": "Male",
+          "min_value": 0.7,
+          "max_value": 1.3,
+          "unit": "mg/dL"
+        },
+        {
+          "gender": "Female",
+          "min_value": 0.6,
+          "max_value": 1.1,
+          "unit": "mg/dL"
+        }
+      ]
+    },
+    {
+      "id": "uric_015",
+      "category_id": 1,
+      "category_slug": "clinical_chemistry",
+      "name_en": "Uric Acid",
+      "name_ar": "حمض البوليك",
+      "preparation": {
+        "fasting_required": false,
+        "instructions_ar": "لا يشترط الصيام، يفضل تقليل الأغذية الغنية بالبروتين قبل التحليل بيوم.",
+        "instructions_en": "Fasting not required, preferably reduce protein-rich foods a day before."
+      },
+      "reference_ranges": [
+        {
+          "gender": "Male",
+          "min_value": 3.4,
+          "max_value": 7.0,
+          "unit": "mg/dL"
+        },
+        {
+          "gender": "Female",
+          "min_value": 2.4,
+          "max_value": 6.0,
+          "unit": "mg/dL"
+        }
+      ]
+    },
+    {
+      "id": "chol_016",
+      "category_id": 1,
+      "category_slug": "clinical_chemistry",
+      "name_en": "Total Cholesterol",
+      "name_ar": "الكوليسترول الكلي",
+      "preparation": {
+        "fasting_required": true,
+        "fasting_hours": 12,
+        "instructions_ar": "يجب الصيام من 12 إلى 14 ساعة. يسمح بشرب الماء فقط.",
+        "instructions_en": "Fast for 12-14 hours. Only water is allowed."
+      },
+      "reference_ranges": [
+        {
+          "age_group": "Adult",
+          "max_value": 200,
+          "unit": "mg/dL"
+        }
+      ]
+    },
+    {
+      "id": "tg_017",
+      "category_id": 1,
+      "category_slug": "clinical_chemistry",
+      "name_en": "Triglycerides",
+      "name_ar": "الدهون الثلاثية",
+      "preparation": {
+        "fasting_required": true,
+        "fasting_hours": 12,
+        "instructions_ar": "صيام 12-14 ساعة ضروري جداً لأن الدهون تتأثر مباشرة بالأكل.",
+        "instructions_en": "12-14 hours fasting is essential as lipids are directly affected by food."
+      },
+      "reference_ranges": [
+        {
+          "age_group": "Adult",
+          "max_value": 150,
+          "unit": "mg/dL"
+        }
+      ]
+    },
+    {
+      "id": "hdl_018",
+      "category_id": 1,
+      "category_slug": "clinical_chemistry",
+      "name_en": "HDL Cholesterol",
+      "name_ar": "الكوليسترول النافع",
+      "preparation": {
+        "fasting_required": true,
+        "fasting_hours": 12,
+        "instructions_ar": "يتم ضمن ملف الدهون، يحتاج صيام 12 ساعة.",
+        "instructions_en": "Part of the lipid profile, requires 12 hours fasting."
+      },
+      "reference_ranges": [
+        {
+          "age_group": "Adult",
+          "min_value": 40,
+          "max_value": 60,
+          "unit": "mg/dL"
+        }
+      ]
+    },
+    {
+      "id": "ldl_019",
+      "category_id": 1,
+      "category_slug": "clinical_chemistry",
+      "name_en": "LDL Cholesterol",
+      "name_ar": "الكوليسترول الضار",
+      "preparation": {
+        "fasting_required": true,
+        "fasting_hours": 12,
+        "instructions_ar": "صيام 12 ساعة لضمان دقة الحسابات.",
+        "instructions_en": "12 hours fasting to ensure calculation accuracy."
+      },
+      "reference_ranges": [
+        {
+          "age_group": "Adult",
+          "max_value": 100,
+          "unit": "mg/dL"
+        }
+      ]
+    },
+    {
+      "id": "iron_020",
+      "category_id": 1,
+      "category_slug": "clinical_chemistry",
+      "name_en": "Serum Iron",
+      "name_ar": "الحديد في الدم",
+      "preparation": {
+        "fasting_required": true,
+        "fasting_hours": 12,
+        "instructions_ar": "يجب الصيام 12 ساعة، ويفضل التوقف عن مكملات الحديد قبلها بـ 48 ساعة.",
+        "instructions_en": "Fast for 12 hours, preferably stop iron supplements 48 hours before."
+      },
+      "reference_ranges": [
+        {
+          "age_group": "Adult",
+          "min_value": 60,
+          "max_value": 170,
+          "unit": "mcg/dL"
+        }
+      ]
+    },
+    {
+      "id": "tibc_021",
+      "category_id": 1,
+      "category_slug": "clinical_chemistry",
+      "name_en": "TIBC",
+      "name_ar": "السعة الكلية لربط الحديد",
+      "preparation": {
+        "fasting_required": true,
+        "fasting_hours": 12,
+        "instructions_ar": "يفضل الصيام 12 ساعة لضمان ثبات مستوى الحديد.",
+        "instructions_en": "Preferably fast for 12 hours to ensure iron level stability."
+      },
+      "reference_ranges": [
+        {
+          "age_group": "Adult",
+          "min_value": 240,
+          "max_value": 450,
+          "unit": "mcg/dL"
+        }
+      ]
+    },
+    {
+      "id": "na_022",
+      "category_id": 1,
+      "category_slug": "clinical_chemistry",
+      "name_en": "Sodium",
+      "name_ar": "الصوديوم",
+      "preparation": {
+        "fasting_required": false,
+        "instructions_ar": "لا يشترط الصيام.",
+        "instructions_en": "Fasting not required."
+      },
+      "reference_ranges": [
+        {
+          "age_group": "Adult",
+          "min_value": 135,
+          "max_value": 145,
+          "unit": "mEq/L"
+        }
+      ]
+    },
+    {
+      "id": "k_023",
+      "category_id": 1,
+      "category_slug": "clinical_chemistry",
+      "name_en": "Potassium",
+      "name_ar": "البوتاسيوم",
+      "preparation": {
+        "fasting_required": false,
+        "instructions_ar": "لا يشترط الصيام، تجنب قبضة اليد بقوة أثناء سحب العينة.",
+        "instructions_en": "Fasting not required, avoid tight fist clenching during sampling."
+      },
+      "reference_ranges": [
+        {
+          "age_group": "Adult",
+          "min_value": 3.5,
+          "max_value": 5.1,
+          "unit": "mEq/L"
+        }
+      ]
+    },
+    {
+      "id": "cl_024",
+      "category_id": 1,
+      "category_slug": "clinical_chemistry",
+      "name_en": "Chloride",
+      "name_ar": "الكلوريد",
+      "preparation": {
+        "fasting_required": false,
+        "instructions_ar": "لا يشترط الصيام.",
+        "instructions_en": "Fasting not required."
+      },
+      "reference_ranges": [
+        {
+          "age_group": "Adult",
+          "min_value": 96,
+          "max_value": 106,
+          "unit": "mEq/L"
+        }
+      ]
+    },
+    {
+      "id": "ca_025",
+      "category_id": 1,
+      "category_slug": "clinical_chemistry",
+      "name_en": "Total Calcium",
+      "name_ar": "الكالسيوم الكلي",
+      "preparation": {
+        "fasting_required": false,
+        "instructions_ar": "لا يشترط الصيام، تجنب المكملات الغذائية صباح يوم التحليل.",
+        "instructions_en": "Fasting not required, avoid supplements on the morning of the test."
+      },
+      "reference_ranges": [
+        {
+          "age_group": "Adult",
+          "min_value": 8.5,
+          "max_value": 10.5,
+          "unit": "mg/dL"
+        }
+      ]
+    },
+    {
+      "id": "mg_026",
+      "category_id": 1,
+      "category_slug": "clinical_chemistry",
+      "name_en": "Magnesium",
+      "name_ar": "المغنيسيوم",
+      "preparation": {
+        "fasting_required": false,
+        "instructions_ar": "لا يشترط الصيام.",
+        "instructions_en": "Fasting not required."
+      },
+      "reference_ranges": [
+        {
+          "age_group": "Adult",
+          "min_value": 1.7,
+          "max_value": 2.2,
+          "unit": "mg/dL"
+        }
+      ]
+    },
+    {
+      "id": "phos_027",
+      "category_id": 1,
+      "category_slug": "clinical_chemistry",
+      "name_en": "Phosphorus",
+      "name_ar": "الفوسفور",
+      "preparation": {
+        "fasting_required": true,
+        "fasting_hours": 8,
+        "instructions_ar": "يفضل الصيام صباحاً لضمان دقة النتائج.",
+        "instructions_en": "Preferably fast in the morning for accurate results."
+      },
+      "reference_ranges": [
+        {
+          "age_group": "Adult",
+          "min_value": 2.5,
+          "max_value": 4.5,
+          "unit": "mg/dL"
+        }
+      ]
+    },
+    {
+      "id": "amy_028",
+      "category_id": 1,
+      "category_slug": "clinical_chemistry",
+      "name_en": "Amylase",
+      "name_ar": "إنزيم الأميليز",
+      "preparation": {
+        "fasting_required": false,
+        "instructions_ar": "لا يشترط الصيام، الامتناع عن الكحول قبل التحليل.",
+        "instructions_en": "Fasting not required, abstain from alcohol before the test."
+      },
+      "reference_ranges": [
+        {
+          "age_group": "Adult",
+          "min_value": 30,
+          "max_value": 110,
+          "unit": "U/L"
+        }
+      ]
+    },
+    {
+      "id": "lip_029",
+      "category_id": 1,
+      "category_slug": "clinical_chemistry",
+      "name_en": "Lipase",
+      "name_ar": "إنزيم الليبيز",
+      "preparation": {
+        "fasting_required": true,
+        "fasting_hours": 8,
+        "instructions_ar": "الصيام لمدة 8 ساعات يساعد في تشخيص التهاب البنكرياس بدقة.",
+        "instructions_en": "Fasting for 8 hours helps in accurately diagnosing pancreatitis."
+      },
+      "reference_ranges": [
+        {
+          "age_group": "Adult",
+          "min_value": 0,
+          "max_value": 160,
+          "unit": "U/L"
+        }
+      ]
+    },
+    {
+      "id": "ck_030",
+      "category_id": 1,
+      "category_slug": "clinical_chemistry",
+      "name_en": "CK (Total)",
+      "name_ar": "إنزيم العضلات الكلي",
+      "preparation": {
+        "fasting_required": false,
+        "instructions_ar": "تجنب المجهود العضلي الشاق أو الحقن العضلي قبل التحليل بـ 24 ساعة.",
+        "instructions_en": "Avoid strenuous muscular effort or IM injections 24 hours before."
+      },
+      "reference_ranges": [
+        {
+          "gender": "Male",
+          "min_value": 39,
+          "max_value": 308,
+          "unit": "U/L"
+        },
+        {
+          "gender": "Female",
+          "min_value": 26,
+          "max_value": 192,
+          "unit": "U/L"
+        }
+      ]
+    },
+    {
+      "id": "ckmb_031",
+      "category_id": 1,
+      "category_slug": "clinical_chemistry",
+      "name_en": "CK-MB",
+      "name_ar": "إنزيم القلب CK-MB",
+      "preparation": {
+        "fasting_required": false,
+        "instructions_ar": "لا يشترط الصيام، يتم سحبه فوراً عند الشك في أزمة قلبية.",
+        "instructions_en": "Fasting not required, collected immediately if cardiac event is suspected."
+      },
+      "reference_ranges": [
+        {
+          "age_group": "Adult",
+          "max_value": 25,
+          "unit": "U/L"
+        }
+      ]
+    },
+    {
+      "id": "trop_032",
+      "category_id": 1,
+      "category_slug": "clinical_chemistry",
+      "name_en": "Troponin I",
+      "name_ar": "تروبونين (إنزيم قلب دقيق)",
+      "preparation": {
+        "fasting_required": false,
+        "instructions_ar": "لا يشترط الصيام، تحليل طوارئ لأزمات القلب.",
+        "instructions_en": "Fasting not required, emergency test for cardiac events."
+      },
+      "reference_ranges": [
+        {
+          "age_group": "Adult",
+          "max_value": 0.04,
+          "unit": "ng/mL"
+        }
+      ]
+    },
+    {
+      "id": "hgb_033",
+      "category_id": 2,
+      "category_slug": "hematology",
+      "name_en": "Hemoglobin",
+      "name_ar": "الهيموجلوبين",
+      "preparation": {
+        "fasting_required": false,
+        "instructions_ar": "لا يشترط الصيام.",
+        "instructions_en": "Fasting not required."
+      },
+      "reference_ranges": [
+        {
+          "gender": "Male",
+          "min_value": 13.5,
+          "max_value": 17.5,
+          "unit": "g/dL"
+        },
+        {
+          "gender": "Female",
+          "min_value": 12.0,
+          "max_value": 15.5,
+          "unit": "g/dL"
+        }
+      ]
+    },
+    {
+      "id": "rbc_034",
+      "category_id": 2,
+      "category_slug": "hematology",
+      "name_en": "RBC Count",
+      "name_ar": "عد كرات الدم الحمراء",
+      "preparation": {
+        "fasting_required": false,
+        "instructions_ar": "لا يشترط الصيام.",
+        "instructions_en": "Fasting not required."
+      },
+      "reference_ranges": [
+        {
+          "gender": "Male",
+          "min_value": 4.5,
+          "max_value": 5.9,
+          "unit": "10^6/uL"
+        },
+        {
+          "gender": "Female",
+          "min_value": 4.1,
+          "max_value": 5.1,
+          "unit": "10^6/uL"
+        }
+      ]
+    },
+    {
+      "id": "wbc_035",
+      "category_id": 2,
+      "category_slug": "hematology",
+      "name_en": "WBC Count",
+      "name_ar": "عد كرات الدم البيضاء",
+      "preparation": {
+        "fasting_required": false,
+        "instructions_ar": "لا يشترط الصيام.",
+        "instructions_en": "Fasting not required."
+      },
+      "reference_ranges": [
+        {
+          "age_group": "Adult",
+          "min_value": 4.0,
+          "max_value": 11.0,
+          "unit": "10^3/uL"
+        }
+      ]
+    },
+    {
+      "id": "plt_036",
+      "category_id": 2,
+      "category_slug": "hematology",
+      "name_en": "Platelets",
+      "name_ar": "الصفائح الدموية",
+      "preparation": {
+        "fasting_required": false,
+        "instructions_ar": "لا يشترط الصيام.",
+        "instructions_en": "Fasting not required."
+      },
+      "reference_ranges": [
+        {
+          "age_group": "Adult",
+          "min_value": 150,
+          "max_value": 450,
+          "unit": "10^3/uL"
+        }
+      ]
+    },
+    {
+      "id": "hct_037",
+      "category_id": 2,
+      "category_slug": "hematology",
+      "name_en": "Hematocrit",
+      "name_ar": "حجم الخلايا المتراصة",
+      "preparation": {
+        "fasting_required": false,
+        "instructions_ar": "لا يشترط الصيام.",
+        "instructions_en": "Fasting not required."
+      },
+      "reference_ranges": [
+        {
+          "gender": "Male",
+          "min_value": 41,
+          "max_value": 50,
+          "unit": "%"
+        },
+        {
+          "gender": "Female",
+          "min_value": 36,
+          "max_value": 44,
+          "unit": "%"
+        }
+      ]
+    },
+    {
+      "id": "mcv_038",
+      "category_id": 2,
+      "category_slug": "hematology",
+      "name_en": "MCV",
+      "name_ar": "متوسط حجم الكرية",
+      "preparation": {
+        "fasting_required": false,
+        "instructions_ar": "لا يشترط الصيام.",
+        "instructions_en": "Fasting not required."
+      },
+      "reference_ranges": [
+        {
+          "age_group": "Adult",
+          "min_value": 80,
+          "max_value": 100,
+          "unit": "fL"
+        }
+      ]
+    },
+    {
+      "id": "esr_039",
+      "category_id": 2,
+      "category_slug": "hematology",
+      "name_en": "ESR",
+      "name_ar": "سرعة الترسيب",
+      "preparation": {
+        "fasting_required": false,
+        "instructions_ar": "يفضل الصيام صباحاً، ويجب تجنب الأدوية المسكنة قبل التحليل.",
+        "instructions_en": "Preferably fast in the morning, avoid pain relievers before the test."
+      },
+      "reference_ranges": [
+        {
+          "gender": "Male",
+          "max_value": 15,
+          "unit": "mm/hr"
+        },
+        {
+          "gender": "Female",
+          "max_value": 20,
+          "unit": "mm/hr"
+        }
+      ]
+    },
+    {
+      "id": "pt_040",
+      "category_id": 2,
+      "category_slug": "hematology",
+      "name_en": "Prothrombin Time (PT)",
+      "name_ar": "زمن البروثرومبين",
+      "preparation": {
+        "fasting_required": false,
+        "instructions_ar": "يجب إبلاغ المعمل بمواعيد أدوية السيولة (ماريفان).",
+        "instructions_en": "Inform the lab about anticoagulant medication (Warfarin) timings."
+      },
+      "reference_ranges": [
+        {
+          "age_group": "Adult",
+          "min_value": 11,
+          "max_value": 13.5,
+          "unit": "sec"
+        }
+      ]
+    },
+    {
+      "id": "inr_041",
+      "category_id": 2,
+      "category_slug": "hematology",
+      "name_en": "INR",
+      "name_ar": "معدل السيولة الدولي",
+      "preparation": {
+        "fasting_required": false,
+        "instructions_ar": "يتم سحبه دورياً لمرضى القلب لضبط جرعة السيولة.",
+        "instructions_en": "Collected regularly for cardiac patients to adjust anticoagulant dosage."
+      },
+      "reference_ranges": [
+        {
+          "age_group": "Adult",
+          "min_value": 0.8,
+          "max_value": 1.2,
+          "unit": "ratio"
+        }
+      ]
+    },
+    {
+      "id": "ptt_042",
+      "category_id": 2,
+      "category_slug": "hematology",
+      "name_en": "APTT",
+      "name_ar": "زمن التجلط الجزئي",
+      "preparation": {
+        "fasting_required": false,
+        "instructions_ar": "لا يشترط الصيام.",
+        "instructions_en": "Fasting not required."
+      },
+      "reference_ranges": [
+        {
+          "age_group": "Adult",
+          "min_value": 25,
+          "max_value": 35,
+          "unit": "sec"
+        }
+      ]
+    },
+    {
+      "id": "retic_043",
+      "category_id": 2,
+      "category_slug": "hematology",
+      "name_en": "Reticulocytes",
+      "name_ar": "الخلايا الشبكية",
+      "preparation": {
+        "fasting_required": false,
+        "instructions_ar": "لا يشترط الصيام، يقيس نشاط النخاع في إنتاج الدم.",
+        "instructions_en": "Fasting not required, measures bone marrow activity in blood production."
+      },
+      "reference_ranges": [
+        {
+          "age_group": "Adult",
+          "min_value": 0.5,
+          "max_value": 2.5,
+          "unit": "%"
+        }
+      ]
+    },
+    {
+      "id": "bt_044",
+      "category_id": 2,
+      "category_slug": "hematology",
+      "name_en": "Bleeding Time",
+      "name_ar": "زمن النزف",
+      "preparation": {
+        "fasting_required": false,
+        "instructions_ar": "يتم في المعمل بعمل وخزة بسيطة في الأذن أو الساعد.",
+        "instructions_en": "Performed in lab with a small prick on the ear or forearm."
+      },
+      "reference_ranges": [
+        {
+          "age_group": "Adult",
+          "min_value": 2,
+          "max_value": 7,
+          "unit": "min"
+        }
+      ]
+    },
+    {
+      "id": "ct_045",
+      "category_id": 2,
+      "category_slug": "hematology",
+      "name_en": "Clotting Time",
+      "name_ar": "زمن التجلط",
+      "preparation": {
+        "fasting_required": false,
+        "instructions_ar": "لا يشترط الصيام.",
+        "instructions_en": "Fasting not required."
+      },
+      "reference_ranges": [
+        {
+          "age_group": "Adult",
+          "min_value": 5,
+          "max_value": 11,
+          "unit": "min"
+        }
+      ]
+    },
+    {
+      "id": "fib_046",
+      "category_id": 2,
+      "category_slug": "hematology",
+      "name_en": "Fibrinogen",
+      "name_ar": "الفبرينوجين",
+      "preparation": {
+        "fasting_required": false,
+        "instructions_ar": "لا يشترط الصيام.",
+        "instructions_en": "Fasting not required."
+      },
+      "reference_ranges": [
+        {
+          "age_group": "Adult",
+          "min_value": 200,
+          "max_value": 400,
+          "unit": "mg/dL"
+        }
+      ]
+    },
+    {
+      "id": "tsh_047",
+      "category_id": 3,
+      "category_slug": "hormones_vitamins",
+      "name_en": "TSH",
+      "name_ar": "هرمون محفز الدرقية",
+      "preparation": {
+        "fasting_required": false,
+        "instructions_ar": "يفضل سحبه صباحاً، وفي حالة تناول دواء الغدة (Euthyrox) يفضل السحب قبل الجرعة.",
+        "instructions_en": "Preferably collected in the morning, before taking thyroid medication (Euthyrox)."
+      },
+      "reference_ranges": [
+        {
+          "age_group": "Adult",
+          "min_value": 0.45,
+          "max_value": 4.5,
+          "unit": "uIU/mL"
+        }
+      ]
+    },
+    {
+      "id": "ft4_048",
+      "category_id": 3,
+      "category_slug": "hormones_vitamins",
+      "name_en": "Free T4",
+      "name_ar": "الثيروكسين الحر",
+      "preparation": {
+        "fasting_required": false,
+        "instructions_ar": "يفضل السحب قبل تناول جرعة دواء الغدة اليومية.",
+        "instructions_en": "Preferably collected before taking the daily thyroid medication dose."
+      },
+      "reference_ranges": [
+        {
+          "age_group": "Adult",
+          "min_value": 0.9,
+          "max_value": 1.7,
+          "unit": "ng/dL"
+        }
+      ]
+    },
+    {
+      "id": "ft3_049",
+      "category_id": 3,
+      "category_slug": "hormones_vitamins",
+      "name_en": "Free T3",
+      "name_ar": "T3 الحر",
+      "preparation": {
+        "fasting_required": false,
+        "instructions_ar": "لا يشترط الصيام.",
+        "instructions_en": "Fasting not required."
+      },
+      "reference_ranges": [
+        {
+          "age_group": "Adult",
+          "min_value": 2.0,
+          "max_value": 4.4,
+          "unit": "pg/mL"
+        }
+      ]
+    },
+    {
+      "id": "prol_050",
+      "category_id": 3,
+      "category_slug": "hormones_vitamins",
+      "name_en": "Prolactin",
+      "name_ar": "هرمون الحليب",
+      "preparation": {
+        "fasting_required": false,
+        "instructions_ar": "يجب الاستيقاظ قبل التحليل بساعتين، وتجنب الإجهاد البدني والنفسي، وتجنب ملامسة الثدي.",
+        "instructions_en": "Wake up 2 hours before the test, avoid physical/mental stress, and avoid breast stimulation."
+      },
+      "reference_ranges": [
+        {
+          "gender": "Female",
+          "min_value": 4.8,
+          "max_value": 23.3,
+          "unit": "ng/mL"
+        },
+        {
+          "gender": "Male",
+          "min_value": 4.0,
+          "max_value": 15.2,
+          "unit": "ng/mL"
+        }
+      ]
+    },
+    {
+      "id": "fsh_051",
+      "category_id": 3,
+      "category_slug": "hormones_vitamins",
+      "name_en": "FSH",
+      "name_ar": "هرمون FSH",
+      "preparation": {
+        "fasting_required": false,
+        "instructions_ar": "للسيدات: يتم إجراء التحليل عادة في اليوم الثاني أو الثالث من الدورة الشهرية.",
+        "instructions_en": "For females: Usually performed on the 2nd or 3rd day of the menstrual cycle."
+      },
+      "reference_ranges": [
+        {
+          "gender": "Female (Follicular)",
+          "min_value": 3.5,
+          "max_value": 12.5,
+          "unit": "mIU/mL"
+        }
+      ]
+    },
+    {
+      "id": "lh_052",
+      "category_id": 3,
+      "category_slug": "hormones_vitamins",
+      "name_en": "LH",
+      "name_ar": "هرمون LH",
+      "preparation": {
+        "fasting_required": false,
+        "instructions_ar": "يتم إجراؤه مع الـ FSH في اليوم الثاني أو الثالث من الدورة.",
+        "instructions_en": "Performed along with FSH on the 2nd or 3rd day of the cycle."
+      },
+      "reference_ranges": [
+        {
+          "gender": "Female (Follicular)",
+          "min_value": 2.4,
+          "max_value": 12.6,
+          "unit": "mIU/mL"
+        }
+      ]
+    },
+    {
+      "id": "e2_053",
+      "category_id": 3,
+      "category_slug": "hormones_vitamins",
+      "name_en": "Estradiol (E2)",
+      "name_ar": "هرمون الاستروجين",
+      "preparation": {
+        "fasting_required": false,
+        "instructions_ar": "لا يشترط الصيام، يرتبط توقيته بمرحلة الدورة الشهرية.",
+        "instructions_en": "Fasting not required, timing depends on the menstrual cycle phase."
+      },
+      "reference_ranges": [
+        {
+          "gender": "Female",
+          "min_value": 12.5,
+          "max_value": 166,
+          "unit": "pg/mL"
+        }
+      ]
+    },
+    {
+      "id": "prog_054",
+      "category_id": 3,
+      "category_slug": "hormones_vitamins",
+      "name_en": "Progesterone",
+      "name_ar": "هرمون البروجسترون",
+      "preparation": {
+        "fasting_required": false,
+        "instructions_ar": "للسيدات: يجرى غالباً في اليوم الـ 21 من الدورة الشهرية لتقييم التبويض.",
+        "instructions_en": "For females: Usually performed on the 21st day of the cycle to assess ovulation."
+      },
+      "reference_ranges": [
+        {
+          "gender": "Female (Luteal)",
+          "min_value": 1.8,
+          "max_value": 23.9,
+          "unit": "ng/mL"
+        }
+      ]
+    },
+    {
+      "id": "test_055",
+      "category_id": 3,
+      "category_slug": "hormones_vitamins",
+      "name_en": "Testosterone (Total)",
+      "name_ar": "هرمون الذكورة الكلي",
+      "preparation": {
+        "fasting_required": false,
+        "instructions_ar": "يفضل سحب العينة في الصباح الباكر (بين 7 و 10 صباحاً).",
+        "instructions_en": "Preferably collected in the early morning (between 7 AM and 10 AM)."
+      },
+      "reference_ranges": [
+        {
+          "gender": "Male",
+          "min_value": 249,
+          "max_value": 836,
+          "unit": "ng/dL"
+        }
+      ]
+    },
+    {
+      "id": "cort_056",
+      "category_id": 3,
+      "category_slug": "hormones_vitamins",
+      "name_en": "Cortisol (AM)",
+      "name_ar": "الكورتيزول الصباحي",
+      "preparation": {
+        "fasting_required": false,
+        "instructions_ar": "يجب سحب العينة في تمام الساعة 8 صباحاً بدقة لضمان النتيجة.",
+        "instructions_en": "Sample must be collected precisely at 8 AM for accurate results."
+      },
+      "reference_ranges": [
+        {
+          "age_group": "Adult",
+          "min_value": 6,
+          "max_value": 23,
+          "unit": "mcg/dL"
+        }
+      ]
+    },
+    {
+      "id": "ins_057",
+      "category_id": 3,
+      "category_slug": "hormones_vitamins",
+      "name_en": "Insulin",
+      "name_ar": "الأنسولين",
+      "preparation": {
+        "fasting_required": true,
+        "fasting_hours": 8,
+        "instructions_ar": "يجب الصيام لمدة 8 ساعات.",
+        "instructions_en": "Must fast for 8 hours."
+      },
+      "reference_ranges": [
+        {
+          "age_group": "Adult",
+          "min_value": 2.6,
+          "max_value": 24.9,
+          "unit": "uIU/mL"
+        }
+      ]
+    },
+    {
+      "id": "vitd_058",
+      "category_id": 3,
+      "category_slug": "hormones_vitamins",
+      "name_en": "Vitamin D",
+      "name_ar": "فيتامين د",
+      "preparation": {
+        "fasting_required": false,
+        "instructions_ar": "لا يشترط الصيام، يفضل التوقف عن مكملات الفيتامين قبل التحليل بـ 24 ساعة.",
+        "instructions_en": "Fasting not required, preferably stop vitamin supplements 24 hours before."
+      },
+      "reference_ranges": [
+        {
+          "status": "Sufficient",
+          "min_value": 30,
+          "max_value": 100,
+          "unit": "ng/mL"
+        }
+      ]
+    },
+    {
+      "id": "vitb12_059",
+      "category_id": 3,
+      "category_slug": "hormones_vitamins",
+      "name_en": "Vitamin B12",
+      "name_ar": "فيتامين ب12",
+      "preparation": {
+        "fasting_required": false,
+        "instructions_ar": "لا يشترط الصيام.",
+        "instructions_en": "Fasting not required."
+      },
+      "reference_ranges": [
+        {
+          "age_group": "Adult",
+          "min_value": 200,
+          "max_value": 900,
+          "unit": "pg/mL"
+        }
+      ]
+    },
+    {
+      "id": "fol_060",
+      "category_id": 3,
+      "category_slug": "hormones_vitamins",
+      "name_en": "Folic Acid",
+      "name_ar": "حمض الفوليك",
+      "preparation": {
+        "fasting_required": true,
+        "fasting_hours": 8,
+        "instructions_ar": "يفضل الصيام لضمان دقة قياس مستوى حمض الفوليك.",
+        "instructions_en": "Preferably fast to ensure accurate measurement of folic acid levels."
+      },
+      "reference_ranges": [
+        {
+          "age_group": "Adult",
+          "min_value": 2.7,
+          "max_value": 17,
+          "unit": "ng/mL"
+        }
+      ]
+    },
+    {
+      "id": "fer_061",
+      "category_id": 3,
+      "category_slug": "hormones_vitamins",
+      "name_en": "Ferritin",
+      "name_ar": "مخزون الحديد",
+      "preparation": {
+        "fasting_required": false,
+        "instructions_ar": "لا يشترط الصيام، وهو أدق تحليل لتشخيص نقص الحديد المبكر.",
+        "instructions_en": "Fasting not required, most accurate test for early iron deficiency."
+      },
+      "reference_ranges": [
+        {
+          "gender": "Male",
+          "min_value": 30,
+          "max_value": 400,
+          "unit": "ng/mL"
+        },
+        {
+          "gender": "Female",
+          "min_value": 15,
+          "max_value": 150,
+          "unit": "ng/mL"
+        }
+      ]
+    },
+    {
+      "id": "gh_062",
+      "category_id": 3,
+      "category_slug": "hormones_vitamins",
+      "name_en": "Growth Hormone",
+      "name_ar": "هرمون النمو",
+      "preparation": {
+        "fasting_required": true,
+        "fasting_hours": 8,
+        "instructions_ar": "يجب الصيام والراحة التامة لمدة 30 دقيقة قبل سحب العينة.",
+        "instructions_en": "Must fast and rest completely for 30 minutes before sampling."
+      },
+      "reference_ranges": [
+        {
+          "age_group": "Adult",
+          "max_value": 3,
+          "unit": "ng/mL"
+        }
+      ]
+    },
+    {
+      "id": "crp_063",
+      "category_id": 4,
+      "category_slug": "immunology_serology",
+      "name_en": "CRP",
+      "name_ar": "بروتين سي التفاعلي",
+      "preparation": {
+        "fasting_required": false,
+        "instructions_ar": "لا يشترط الصيام، مؤشر عام لوجود التهاب.",
+        "instructions_en": "Fasting not required, general marker for inflammation."
+      },
+      "reference_ranges": [
+        {
+          "age_group": "Adult",
+          "max_value": 6,
+          "unit": "mg/L"
+        }
+      ]
+    },
+    {
+      "id": "aso_064",
+      "category_id": 4,
+      "category_slug": "immunology_serology",
+      "name_en": "ASOT",
+      "name_ar": "الميكروب السبحي",
+      "preparation": {
+        "fasting_required": false,
+        "instructions_ar": "لا يشترط الصيام.",
+        "instructions_en": "Fasting not required."
+      },
+      "reference_ranges": [
+        {
+          "age_group": "Adult",
+          "max_value": 200,
+          "unit": "IU/mL"
+        }
+      ]
+    },
+    {
+      "id": "rf_065",
+      "category_id": 4,
+      "category_slug": "immunology_serology",
+      "name_en": "Rheumatoid Factor",
+      "name_ar": "عامِل الروماتويد",
+      "preparation": {
+        "fasting_required": false,
+        "instructions_ar": "لا يشترط الصيام.",
+        "instructions_en": "Fasting not required."
+      },
+      "reference_ranges": [
+        {
+          "age_group": "Adult",
+          "max_value": 15,
+          "unit": "IU/mL"
+        }
+      ]
+    },
+    {
+      "id": "hcv_066",
+      "category_id": 4,
+      "category_slug": "immunology_serology",
+      "name_en": "HCV Antibody",
+      "name_ar": "أجسام مضادة فيروس سي",
+      "preparation": {
+        "fasting_required": false,
+        "instructions_ar": "لا يشترط الصيام.",
+        "instructions_en": "Fasting not required."
+      },
+      "reference_ranges": [
+        {
+          "status": "Negative"
+        }
+      ]
+    },
+    {
+      "id": "hbsag_067",
+      "category_id": 4,
+      "category_slug": "immunology_serology",
+      "name_en": "HBsAg",
+      "name_ar": "فيروس بي السطحي",
+      "preparation": {
+        "fasting_required": false,
+        "instructions_ar": "لا يشترط الصيام.",
+        "instructions_en": "Fasting not required."
+      },
+      "reference_ranges": [
+        {
+          "status": "Negative"
+        }
+      ]
+    },
+    {
+      "id": "hiv_068",
+      "category_id": 4,
+      "category_slug": "immunology_serology",
+      "name_en": "HIV 1/2 Ab",
+      "name_ar": "أجسام مضادة للإيدز",
+      "preparation": {
+        "fasting_required": false,
+        "instructions_ar": "لا يشترط الصيام.",
+        "instructions_en": "Fasting not required."
+      },
+      "reference_ranges": [
+        {
+          "status": "Negative"
+        }
+      ]
+    },
+    {
+      "id": "ana_069",
+      "category_id": 4,
+      "category_slug": "immunology_serology",
+      "name_en": "ANA",
+      "name_ar": "أجسام مضادة للنواة",
+      "preparation": {
+        "fasting_required": false,
+        "instructions_ar": "لا يشترط الصيام، يستخدم لتشخيص أمراض المناعة الذاتية.",
+        "instructions_en": "Fasting not required, used to diagnose autoimmune diseases."
+      },
+      "reference_ranges": [
+        {
+          "status": "Negative",
+          "unit": "titer < 1:80"
+        }
+      ]
+    },
+    {
+      "id": "toxo_070",
+      "category_id": 4,
+      "category_slug": "immunology_serology",
+      "name_en": "Toxoplasma IgG",
+      "name_ar": "توكسوبلازما (داء القطط) IgG",
+      "preparation": {
+        "fasting_required": false,
+        "instructions_ar": "لا يشترط الصيام.",
+        "instructions_en": "Fasting not required."
+      },
+      "reference_ranges": [
+        {
+          "status": "Negative < 1.0",
+          "unit": "Index"
+        }
+      ]
+    },
+    {
+      "id": "vdrl_071",
+      "category_id": 4,
+      "category_slug": "immunology_serology",
+      "name_en": "VDRL/Syphilis",
+      "name_ar": "تحليل الزهري",
+      "preparation": {
+        "fasting_required": false,
+        "instructions_ar": "لا يشترط الصيام.",
+        "instructions_en": "Fasting not required."
+      },
+      "reference_ranges": [
+        {
+          "status": "Non-reactive"
+        }
+      ]
+    },
+    {
+      "id": "bru_072",
+      "category_id": 4,
+      "category_slug": "immunology_serology",
+      "name_en": "Brucella (Widal)",
+      "name_ar": "الحمى المالطية",
+      "preparation": {
+        "fasting_required": false,
+        "instructions_ar": "لا يشترط الصيام.",
+        "instructions_en": "Fasting not required."
+      },
+      "reference_ranges": [
+        {
+          "status": "Negative < 1/80"
+        }
+      ]
+    },
+    {
+      "id": "typh_073",
+      "category_id": 4,
+      "category_slug": "immunology_serology",
+      "name_en": "Widal Test",
+      "name_ar": "حمى التيفود",
+      "preparation": {
+        "fasting_required": false,
+        "instructions_ar": "لا يشترط الصيام.",
+        "instructions_en": "Fasting not required."
+      },
+      "reference_ranges": [
+        {
+          "status": "Negative < 1/80"
+        }
+      ]
+    },
+    {
+      "id": "hpyr_074",
+      "category_id": 4,
+      "category_slug": "immunology_serology",
+      "name_en": "H. Pylori (Ag in Stool)",
+      "name_ar": "جرثومة المعدة في البراز",
+      "preparation": {
+        "fasting_required": false,
+        "instructions_ar": "عينة براز طازجة، يفضل التوقف عن أدوية الحموضة والمضادات قبلها بـ 14 يوم.",
+        "instructions_en": "Fresh stool sample, preferably stop PPIs and antibiotics 14 days before."
+      },
+      "reference_ranges": [
+        {
+          "status": "Negative"
+        }
+      ]
+    },
+    {
+      "id": "dsdna_101",
+      "category_id": 5,
+      "category_slug": "specialized_immunology_autoimmune",
+      "name_en": "Anti-dsDNA",
+      "name_ar": "أجسام مضادة للـ DNA",
+      "preparation": {
+        "fasting_required": false,
+        "instructions_ar": "يستخدم لتأكيد تشخيص الذئبة الحمراء.",
+        "instructions_en": "Used to confirm Systemic Lupus Erythematosus (SLE) diagnosis."
+      },
+      "reference_ranges": [
+        {
+          "status": "Negative < 25",
+          "unit": "IU/mL"
+        }
+      ]
+    },
+    {
+      "id": "ccp_102",
+      "category_id": 5,
+      "category_slug": "specialized_immunology_autoimmune",
+      "name_en": "Anti-CCP",
+      "name_ar": "أجسام مضادة للروماتويد المتقدم",
+      "preparation": {
+        "fasting_required": false,
+        "instructions_ar": "أدق من الـ RF في تشخيص الروماتويد.",
+        "instructions_en": "More specific than RF for Rheumatoid Arthritis diagnosis."
+      },
+      "reference_ranges": [
+        {
+          "status": "Negative < 20",
+          "unit": "U/mL"
+        }
+      ]
+    },
+    {
+      "id": "c3_103",
+      "category_id": 5,
+      "category_slug": "specialized_immunology_autoimmune",
+      "name_en": "Complement C3",
+      "name_ar": "بروتين المتممة C3",
+      "preparation": {
+        "fasting_required": false,
+        "instructions_ar": "لا يشترط الصيام.",
+        "instructions_en": "Fasting not required."
+      },
+      "reference_ranges": [
+        {
+          "min_value": 90,
+          "max_value": 180,
+          "unit": "mg/dL"
+        }
+      ]
+    },
+    {
+      "id": "c4_104",
+      "category_id": 5,
+      "category_slug": "specialized_immunology_autoimmune",
+      "name_en": "Complement C4",
+      "name_ar": "بروتين المتممة C4",
+      "preparation": {
+        "fasting_required": false,
+        "instructions_ar": "لا يشترط الصيام.",
+        "instructions_en": "Fasting not required."
+      },
+      "reference_ranges": [
+        {
+          "min_value": 10,
+          "max_value": 40,
+          "unit": "mg/dL"
+        }
+      ]
+    },
+    {
+      "id": "ant_tpo_105",
+      "category_id": 5,
+      "category_slug": "specialized_immunology_autoimmune",
+      "name_en": "Anti-TPO",
+      "name_ar": "أجسام مضادة لإنزيم الغدة",
+      "preparation": {
+        "fasting_required": false,
+        "instructions_ar": "يستخدم لتشخيص مرض هاشيموتو المناعي.",
+        "instructions_en": "Used to diagnose Hashimoto's autoimmune disease."
+      },
+      "reference_ranges": [
+        {
+          "max_value": 34,
+          "unit": "IU/mL"
+        }
+      ]
+    },
+    {
+      "id": "ige_tot_106",
+      "category_id": 5,
+      "category_slug": "specialized_immunology_autoimmune",
+      "name_en": "Total IgE",
+      "name_ar": "الأجسام المضادة للحساسية",
+      "preparation": {
+        "fasting_required": false,
+        "instructions_ar": "يقيس الاستعداد العام للحساسية في الجسم.",
+        "instructions_en": "Measures general allergic predisposition in the body."
+      },
+      "reference_ranges": [
+        {
+          "max_value": 100,
+          "unit": "IU/mL"
+        }
+      ]
+    },
+    {
+      "id": "psa_075",
+      "category_id": 6,
+      "category_slug": "tumor_markers",
+      "name_en": "PSA (Total)",
+      "name_ar": "دلالات البروستاتا الكلية",
+      "preparation": {
+        "fasting_required": false,
+        "instructions_ar": "يجب الامتناع عن الجماع، ركوب الدراجة، أو الفحص الشرجي لمدة 48 ساعة قبل التحليل.",
+        "instructions_en": "Abstain from sexual intercourse, cycling, or rectal examination for 48 hours before the test."
+      },
+      "reference_ranges": [
+        {
+          "age_group": "Adult",
+          "max_value": 4.0,
+          "unit": "ng/mL"
+        }
+      ]
+    },
+    {
+      "id": "cea_076",
+      "category_id": 6,
+      "category_slug": "tumor_markers",
+      "name_en": "CEA",
+      "name_ar": "دلالات أورام الجهاز الهضمي",
+      "preparation": {
+        "fasting_required": false,
+        "instructions_ar": "يجب إخبار المعمل في حالة التدخين لأن النسبة تختلف للمدخنين.",
+        "instructions_en": "Inform the lab if you are a smoker as the reference range differs."
+      },
+      "reference_ranges": [
+        {
+          "status": "Non-smoker",
+          "max_value": 3.0,
+          "unit": "ng/mL"
+        }
+      ]
+    },
+    {
+      "id": "afp_077",
+      "category_id": 6,
+      "category_slug": "tumor_markers",
+      "name_en": "AFP",
+      "name_ar": "دلالات أورام الكبد",
+      "preparation": {
+        "fasting_required": false,
+        "instructions_ar": "يستخدم لمتابعة مرضى تليف الكبد وأورام الجنين.",
+        "instructions_en": "Used to monitor liver cirrhosis patients and fetal tumors."
+      },
+      "reference_ranges": [
+        {
+          "age_group": "Adult",
+          "max_value": 10,
+          "unit": "ng/mL"
+        }
+      ]
+    },
+    {
+      "id": "ca125_078",
+      "category_id": 6,
+      "category_slug": "tumor_markers",
+      "name_en": "CA 125",
+      "name_ar": "دلالات أورام المبيض",
+      "preparation": {
+        "fasting_required": false,
+        "instructions_ar": "يفضل عدم إجراء التحليل أثناء فترة الدورة الشهرية.",
+        "instructions_en": "Preferably not performed during the menstrual period."
+      },
+      "reference_ranges": [
+        {
+          "gender": "Female",
+          "max_value": 35,
+          "unit": "U/mL"
+        }
+      ]
+    },
+    {
+      "id": "ca153_079",
+      "category_id": 6,
+      "category_slug": "tumor_markers",
+      "name_en": "CA 15-3",
+      "name_ar": "دلالات أورام الثدي",
+      "preparation": {
+        "fasting_required": false,
+        "instructions_ar": "لا يشترط الصيام.",
+        "instructions_en": "Fasting not required."
+      },
+      "reference_ranges": [
+        {
+          "gender": "Female",
+          "max_value": 30,
+          "unit": "U/mL"
+        }
+      ]
+    },
+    {
+      "id": "ca199_080",
+      "category_id": 6,
+      "category_slug": "tumor_markers",
+      "name_en": "CA 19-9",
+      "name_ar": "دلالات أورام البنكرياس",
+      "preparation": {
+        "fasting_required": false,
+        "instructions_ar": "لا يشترط الصيام.",
+        "instructions_en": "Fasting not required."
+      },
+      "reference_ranges": [
+        {
+          "age_group": "Adult",
+          "max_value": 37,
+          "unit": "U/mL"
+        }
+      ]
+    },
+    {
+      "id": "cult_urin_107",
+      "category_id": 7,
+      "category_slug": "microbiology_cultures",
+      "name_en": "Urine Culture",
+      "name_ar": "مزرعة بول",
+      "preparation": {
+        "fasting_required": false,
+        "instructions_ar": "يجب غسل المنطقة بالماء والصابون، وتجفيفها، وتجميع عينة من منتصف المجرى في حاوية معقمة.",
+        "instructions_en": "Wash area with soap and water, dry, and collect mid-stream sample in a sterile container."
+      },
+      "reference_ranges": [
+        {
+          "status": "No growth"
+        }
+      ]
+    },
+    {
+      "id": "cult_st_108",
+      "category_id": 7,
+      "category_slug": "microbiology_cultures",
+      "name_en": "Stool Culture",
+      "name_ar": "مزرعة براز",
+      "preparation": {
+        "fasting_required": false,
+        "instructions_ar": "توضع العينة في حاوية معقمة، مع تجنب خلطها بالماء أو البول.",
+        "instructions_en": "Place sample in a sterile container, avoid mixing with water or urine."
+      },
+      "reference_ranges": [
+        {
+          "status": "No pathogens isolated"
+        }
+      ]
+    },
+    {
+      "id": "cult_bl_109",
+      "category_id": 7,
+      "category_slug": "microbiology_cultures",
+      "name_en": "Blood Culture",
+      "name_ar": "مزرعة دم",
+      "preparation": {
+        "fasting_required": false,
+        "instructions_ar": "يفضل السحب أثناء ارتفاع درجة الحرارة (نوبة الحمى).",
+        "instructions_en": "Preferably collected during peak temperature (fever spike)."
+      },
+      "reference_ranges": [
+        {
+          "status": "No growth after 5 days"
+        }
+      ]
+    },
+    {
+      "id": "gram_st_110",
+      "category_id": 7,
+      "category_slug": "microbiology_cultures",
+      "name_en": "Gram Stain",
+      "name_ar": "صبغة جرام",
+      "preparation": {
+        "fasting_required": false,
+        "instructions_ar": "تؤخذ مسحة من مكان الإصابة بالالتهاب مباشرة.",
+        "instructions_en": "Swab taken directly from the site of inflammation."
+      },
+      "reference_ranges": [
+        {
+          "status": "Normal flora or pathogens"
+        }
+      ]
+    },
+    {
+      "id": "urin_081",
+      "category_id": 8,
+      "category_slug": "body_fluids_parasitology",
+      "name_en": "Complete Urine Analysis",
+      "name_ar": "تحليل بول كامل",
+      "preparation": {
+        "fasting_required": false,
+        "instructions_ar": "أول عينة صباحية هي الأفضل لأنها تكون مركزة.",
+        "instructions_en": "First morning sample is preferred as it is concentrated."
+      },
+      "reference_ranges": [
+        {
+          "field": "Pus",
+          "max_value": 5,
+          "unit": "/HPF"
+        }
+      ]
+    },
+    {
+      "id": "stool_082",
+      "category_id": 8,
+      "category_slug": "body_fluids_parasitology",
+      "name_en": "Stool Analysis",
+      "name_ar": "تحليل براز كامل",
+      "preparation": {
+        "fasting_required": false,
+        "instructions_ar": "عينة طازجة في حاوية نظيفة وجافة.",
+        "instructions_en": "Fresh sample in a clean, dry container."
+      },
+      "reference_ranges": [
+        {
+          "field": "Parasites",
+          "status": "None seen"
+        }
+      ]
+    },
+    {
+      "id": "semen_083",
+      "category_id": 8,
+      "category_slug": "body_fluids_parasitology",
+      "name_en": "Semen Analysis",
+      "name_ar": "تحليل سائل منوي",
+      "preparation": {
+        "fasting_required": false,
+        "instructions_ar": "يجب الامتناع عن الجماع لمدة 3 إلى 5 أيام. يجب وضع العينة في المعمل أو وصولها خلال 30 دقيقة.",
+        "instructions_en": "Abstain from intercourse for 3-5 days. Sample must reach the lab within 30 minutes."
+      },
+      "reference_ranges": [
+        {
+          "field": "Count",
+          "min_value": 15,
+          "unit": "million/mL"
+        }
+      ]
+    },
+    {
+      "id": "ob_084",
+      "category_id": 8,
+      "category_slug": "body_fluids_parasitology",
+      "name_en": "Occult Blood in Stool",
+      "name_ar": "الدم الخفي في البراز",
+      "preparation": {
+        "fasting_required": false,
+        "instructions_ar": "الامتناع عن تناول اللحوم الحمراء، الفجل، أدوية الروماتيزم، وفيتامين سي لمدة 3 أيام.",
+        "instructions_en": "Abstain from red meat, radish, NSAIDs, and Vitamin C for 3 days."
+      },
+      "reference_ranges": [
+        {
+          "status": "Negative"
+        }
+      ]
+    },
+    {
+      "id": "preg_085",
+      "category_id": 8,
+      "category_slug": "body_fluids_parasitology",
+      "name_en": "Pregnancy Test (Urine)",
+      "name_ar": "اختبار حمل بالبول",
+      "preparation": {
+        "fasting_required": false,
+        "instructions_ar": "يفضل إجراء التحليل في عينة الصباح الباكر لتركيز هرمون الحمل.",
+        "instructions_en": "Preferably performed on early morning sample for concentrated HCG."
+      },
+      "reference_ranges": [
+        {
+          "status": "Positive/Negative"
+        }
+      ]
+    },
+    {
+      "id": "b_preg_086",
+      "category_id": 8,
+      "category_slug": "body_fluids_parasitology",
+      "name_en": "Beta-HCG (Quantitative)",
+      "name_ar": "اختبار حمل رقمي بالدم",
+      "preparation": {
+        "fasting_required": false,
+        "instructions_ar": "أدق اختبار لتحديد عمر الحمل ومتابعة سلامته.",
+        "instructions_en": "Most accurate test to determine gestational age and monitor pregnancy health."
+      },
+      "reference_ranges": [
+        {
+          "status": "Non-pregnant < 5",
+          "unit": "mIU/mL"
+        }
+      ]
+    },
+    {
+      "id": "drug_087",
+      "category_id": 9,
+      "category_slug": "toxicology_tdm",
+      "name_en": "Multi-Drug Screen (Urine)",
+      "name_ar": "مسح المخدرات في البول",
+      "preparation": {
+        "fasting_required": false,
+        "instructions_ar": "يتم تجميع العينة تحت إشراف طاقم المعمل لضمان النزاهة.",
+        "instructions_en": "Sample collected under lab staff supervision to ensure integrity."
+      },
+      "reference_ranges": [
+        {
+          "status": "Negative"
+        }
+      ]
+    },
+    {
+      "id": "phen_111",
+      "category_id": 9,
+      "category_slug": "toxicology_tdm",
+      "name_en": "Phenytoin level",
+      "name_ar": "مستوى دواء الصرع",
+      "preparation": {
+        "fasting_required": false,
+        "instructions_ar": "يجب سحب العينة قبل موعد الجرعة القادمة مباشرة (Trough level).",
+        "instructions_en": "Sample must be collected right before the next dose (Trough level)."
+      },
+      "reference_ranges": [
+        {
+          "min_value": 10,
+          "max_value": 20,
+          "unit": "mcg/mL"
+        }
+      ]
+    },
+    {
+      "id": "carb_112",
+      "category_id": 9,
+      "category_slug": "toxicology_tdm",
+      "name_en": "Carbamazepine",
+      "name_ar": "دواء تجريتول",
+      "preparation": {
+        "fasting_required": false,
+        "instructions_ar": "سحب العينة قبل الجرعة الصباحية لضبط تركيز الدواء.",
+        "instructions_en": "Collect sample before the morning dose to adjust drug concentration."
+      },
+      "reference_ranges": [
+        {
+          "min_value": 4,
+          "max_value": 12,
+          "unit": "mcg/mL"
+        }
+      ]
+    },
+    {
+      "id": "vanc_113",
+      "category_id": 9,
+      "category_slug": "toxicology_tdm",
+      "name_en": "Vancomycin",
+      "name_ar": "مستوى مضاد حيوي فانكومايسين",
+      "preparation": {
+        "fasting_required": false,
+        "instructions_ar": "يتم التنسيق مع التمريض للسحب في أدنى مستوى (قبل الجرعة).",
+        "instructions_en": "Coordinate with nursing for collection at trough level (before dose)."
+      },
+      "reference_ranges": [
+        {
+          "min_value": 15,
+          "max_value": 20,
+          "unit": "mcg/mL"
+        }
+      ]
+    },
+    {
+      "id": "lead_088",
+      "category_id": 9,
+      "category_slug": "toxicology_tdm",
+      "name_en": "Blood Lead",
+      "name_ar": "الرصاص في الدم",
+      "preparation": {
+        "fasting_required": false,
+        "instructions_ar": "لا يشترط الصيام، يستخدم للكشف عن التسمم البيئي.",
+        "instructions_en": "Fasting not required, used to detect environmental poisoning."
+      },
+      "reference_ranges": [
+        {
+          "max_value": 10,
+          "unit": "mcg/dL"
+        }
+      ]
+    },
+    {
+      "id": "pcr_092",
+      "category_id": 10,
+      "category_slug": "molecular_biology_pcr",
+      "name_en": "HCV PCR (Quantitative)",
+      "name_ar": "تحليل PCR لفيروس سي",
+      "preparation": {
+        "fasting_required": false,
+        "instructions_ar": "لا يشترط الصيام، يقيس عدد نسخ الفيروس في الدم.",
+        "instructions_en": "Fasting not required, measures the number of viral copies in the blood."
+      },
+      "reference_ranges": [
+        {
+          "status": "Not detected"
+        }
+      ]
+    },
+    {
+      "id": "hbv_pcr_114",
+      "category_id": 10,
+      "category_slug": "molecular_biology_pcr",
+      "name_en": "HBV DNA PCR",
+      "name_ar": "تحليل PCR لفيروس بي",
+      "preparation": {
+        "fasting_required": false,
+        "instructions_ar": "يستخدم لمتابعة استجابة المريض للعلاج.",
+        "instructions_en": "Used to monitor patient response to treatment."
+      },
+      "reference_ranges": [
+        {
+          "status": "Not detected"
+        }
+      ]
+    },
+    {
+      "id": "cov_115",
+      "category_id": 10,
+      "category_slug": "molecular_biology_pcr",
+      "name_en": "COVID-19 PCR",
+      "name_ar": "مسحة كورونا PCR",
+      "preparation": {
+        "fasting_required": false,
+        "instructions_ar": "تؤخذ المسحة بعمق من الأنف والبلعوم.",
+        "instructions_en": "Swab taken deeply from the nasopharynx."
+      },
+      "reference_ranges": [
+        {
+          "status": "Negative"
+        }
+      ]
+    }
+  ],
+  "lab_test_groups": [
+    {
+      "id": "diabetes_profile_001",
+      "category_id": 1,
+      "category_slug": "clinical_chemistry",
+      "name_en": "Diabetes Profile",
+      "name_ar": "مجموعة السكر",
+      "description_en": "Diabetes-related blood sugar tests.",
+      "description_ar": "مجموعة تحاليل خاصة بتقييم السكر.",
+      "tests_count": 4,
+      "sort_order": 1,
+      "is_active": true
+    },
+    {
+      "id": "liver_function_profile_002",
+      "category_id": 1,
+      "category_slug": "clinical_chemistry",
+      "name_en": "Liver Function Profile",
+      "name_ar": "مجموعة وظائف الكبد",
+      "description_en": "Core liver enzymes and bilirubin/protein tests.",
+      "description_ar": "مجموعة أساسية لوظائف الكبد والإنزيمات والصفراء والبروتينات.",
+      "tests_count": 8,
+      "sort_order": 2,
+      "is_active": true
+    },
+    {
+      "id": "kidney_function_profile_003",
+      "category_id": 1,
+      "category_slug": "clinical_chemistry",
+      "name_en": "Kidney Function Profile",
+      "name_ar": "مجموعة وظائف الكلى",
+      "description_en": "Core kidney function and uric acid tests.",
+      "description_ar": "مجموعة أساسية لتقييم وظائف الكلى وحمض البوليك.",
+      "tests_count": 3,
+      "sort_order": 3,
+      "is_active": true
+    },
+    {
+      "id": "lipid_profile_004",
+      "category_id": 1,
+      "category_slug": "clinical_chemistry",
+      "name_en": "Lipid Profile",
+      "name_ar": "دهون الدم",
+      "description_en": "Blood lipid and cholesterol profile.",
+      "description_ar": "مجموعة دهون الدم والكوليسترول.",
+      "tests_count": 4,
+      "sort_order": 4,
+      "is_active": true
+    },
+    {
+      "id": "iron_profile_005",
+      "category_id": 1,
+      "category_slug": "clinical_chemistry",
+      "name_en": "Iron Profile",
+      "name_ar": "مجموعة الحديد",
+      "description_en": "Iron studies panel.",
+      "description_ar": "مجموعة تحاليل الحديد.",
+      "tests_count": 2,
+      "sort_order": 5,
+      "is_active": true
+    },
+    {
+      "id": "electrolyte_profile_006",
+      "category_id": 1,
+      "category_slug": "clinical_chemistry",
+      "name_en": "Electrolyte Profile",
+      "name_ar": "مجموعة الأملاح",
+      "description_en": "Electrolytes and mineral balance profile.",
+      "description_ar": "مجموعة الأملاح والمعادن الأساسية.",
+      "tests_count": 6,
+      "sort_order": 6,
+      "is_active": true
+    },
+    {
+      "id": "pancreatic_enzymes_profile_007",
+      "category_id": 1,
+      "category_slug": "clinical_chemistry",
+      "name_en": "Pancreatic Enzymes Profile",
+      "name_ar": "مجموعة إنزيمات البنكرياس",
+      "description_en": "Pancreatic enzyme tests.",
+      "description_ar": "مجموعة إنزيمات البنكرياس.",
+      "tests_count": 2,
+      "sort_order": 7,
+      "is_active": true
+    },
+    {
+      "id": "cardiac_markers_profile_008",
+      "category_id": 1,
+      "category_slug": "clinical_chemistry",
+      "name_en": "Cardiac Markers Profile",
+      "name_ar": "مجموعة إنزيمات القلب",
+      "description_en": "Cardiac and muscle injury markers.",
+      "description_ar": "مجموعة مؤشرات وإِنزيمات القلب والعضلات.",
+      "tests_count": 3,
+      "sort_order": 8,
+      "is_active": true
+    },
+    {
+      "id": "cbc_profile_009",
+      "category_id": 2,
+      "category_slug": "hematology",
+      "name_en": "Complete Blood Count (CBC)",
+      "name_ar": "صورة دم كاملة",
+      "description_en": "Complete blood count core measurements.",
+      "description_ar": "مجموعة صورة الدم الكاملة.",
+      "tests_count": 6,
+      "sort_order": 1,
+      "is_active": true
+    },
+    {
+      "id": "coagulation_profile_010",
+      "category_id": 2,
+      "category_slug": "hematology",
+      "name_en": "Coagulation Profile",
+      "name_ar": "مجموعة التجلط والسيولة",
+      "description_en": "Coagulation and bleeding profile.",
+      "description_ar": "مجموعة اختبارات التجلط والسيولة والنزف.",
+      "tests_count": 6,
+      "sort_order": 2,
+      "is_active": true
+    },
+    {
+      "id": "anemia_followup_profile_011",
+      "category_id": 2,
+      "category_slug": "hematology",
+      "name_en": "Anemia Follow-up Profile",
+      "name_ar": "مجموعة متابعة الأنيميا",
+      "description_en": "Hematology tests useful for anemia follow-up.",
+      "description_ar": "مجموعة مفيدة في متابعة الأنيميا وتكوين الدم.",
+      "tests_count": 5,
+      "sort_order": 3,
+      "is_active": true
+    },
+    {
+      "id": "thyroid_profile_012",
+      "category_id": 3,
+      "category_slug": "hormones_vitamins",
+      "name_en": "Thyroid Profile",
+      "name_ar": "مجموعة الغدة الدرقية",
+      "description_en": "Thyroid hormone assessment profile.",
+      "description_ar": "مجموعة تقييم الغدة الدرقية.",
+      "tests_count": 3,
+      "sort_order": 1,
+      "is_active": true
+    },
+    {
+      "id": "female_hormone_profile_013",
+      "category_id": 3,
+      "category_slug": "hormones_vitamins",
+      "name_en": "Female Hormone Profile",
+      "name_ar": "مجموعة الهرمونات الأنثوية",
+      "description_en": "Female reproductive hormone profile.",
+      "description_ar": "مجموعة الهرمونات الأنثوية والخصوبة.",
+      "tests_count": 5,
+      "sort_order": 2,
+      "is_active": true
+    },
+    {
+      "id": "male_hormone_profile_014",
+      "category_id": 3,
+      "category_slug": "hormones_vitamins",
+      "name_en": "Male Hormone Profile",
+      "name_ar": "مجموعة الهرمونات الذكرية",
+      "description_en": "Male hormone and fertility-related profile.",
+      "description_ar": "مجموعة الهرمونات الذكرية وبعض المؤشرات المرتبطة بها.",
+      "tests_count": 4,
+      "sort_order": 3,
+      "is_active": true
+    },
+    {
+      "id": "vitamins_profile_015",
+      "category_id": 3,
+      "category_slug": "hormones_vitamins",
+      "name_en": "Vitamins Profile",
+      "name_ar": "مجموعة الفيتامينات",
+      "description_en": "Vitamin deficiency screening profile.",
+      "description_ar": "مجموعة تحاليل الفيتامينات.",
+      "tests_count": 3,
+      "sort_order": 4,
+      "is_active": true
+    },
+    {
+      "id": "metabolic_profile_016",
+      "category_id": 3,
+      "category_slug": "hormones_vitamins",
+      "name_en": "Metabolic Hormone Profile",
+      "name_ar": "مجموعة التمثيل الغذائي",
+      "description_en": "Metabolic and endocrine support profile.",
+      "description_ar": "مجموعة مساعدة لتقييم التمثيل الغذائي والغدد.",
+      "tests_count": 4,
+      "sort_order": 5,
+      "is_active": true
+    },
+    {
+      "id": "hepatitis_viral_screen_017",
+      "category_id": 4,
+      "category_slug": "immunology_serology",
+      "name_en": "Viral Hepatitis Screen",
+      "name_ar": "مجموعة فيروسات الكبد",
+      "description_en": "Basic viral hepatitis screening profile.",
+      "description_ar": "مجموعة أساسية لفحص فيروسات الكبد.",
+      "tests_count": 2,
+      "sort_order": 1,
+      "is_active": true
+    },
+    {
+      "id": "arthritis_inflammation_profile_018",
+      "category_id": 4,
+      "category_slug": "immunology_serology",
+      "name_en": "Arthritis & Inflammation Profile",
+      "name_ar": "مجموعة الالتهابات والروماتيزم",
+      "description_en": "Inflammatory and rheumatologic markers.",
+      "description_ar": "مجموعة مؤشرات الالتهاب والروماتيزم.",
+      "tests_count": 4,
+      "sort_order": 2,
+      "is_active": true
+    },
+    {
+      "id": "infectious_disease_screen_019",
+      "category_id": 4,
+      "category_slug": "immunology_serology",
+      "name_en": "Infectious Disease Screen",
+      "name_ar": "مجموعة الأمراض المعدية",
+      "description_en": "Common infectious disease screening profile.",
+      "description_ar": "مجموعة شائعة لفحص الأمراض المعدية.",
+      "tests_count": 5,
+      "sort_order": 3,
+      "is_active": true
+    },
+    {
+      "id": "autoimmune_profile_020",
+      "category_id": 5,
+      "category_slug": "specialized_immunology_autoimmune",
+      "name_en": "Autoimmune Profile",
+      "name_ar": "مجموعة أمراض المناعة الذاتية",
+      "description_en": "Autoimmune disease workup profile.",
+      "description_ar": "مجموعة تحاليل لأمراض المناعة الذاتية.",
+      "tests_count": 3,
+      "sort_order": 1,
+      "is_active": true
+    },
+    {
+      "id": "complement_profile_021",
+      "category_id": 5,
+      "category_slug": "specialized_immunology_autoimmune",
+      "name_en": "Complement Profile",
+      "name_ar": "مجموعة المتممات المناعية",
+      "description_en": "Complement system profile.",
+      "description_ar": "مجموعة المتممات المناعية.",
+      "tests_count": 2,
+      "sort_order": 2,
+      "is_active": true
+    },
+    {
+      "id": "female_tumor_markers_022",
+      "category_id": 6,
+      "category_slug": "tumor_markers",
+      "name_en": "Female Tumor Markers Profile",
+      "name_ar": "مجموعة دلالات الأورام للسيدات",
+      "description_en": "Common tumor markers used in females.",
+      "description_ar": "مجموعة شائعة من دلالات الأورام للسيدات.",
+      "tests_count": 5,
+      "sort_order": 1,
+      "is_active": true
+    },
+    {
+      "id": "male_tumor_markers_023",
+      "category_id": 6,
+      "category_slug": "tumor_markers",
+      "name_en": "Male Tumor Markers Profile",
+      "name_ar": "مجموعة دلالات الأورام للرجال",
+      "description_en": "Common tumor markers used in males.",
+      "description_ar": "مجموعة شائعة من دلالات الأورام للرجال.",
+      "tests_count": 4,
+      "sort_order": 2,
+      "is_active": true
+    },
+    {
+      "id": "general_tumor_markers_024",
+      "category_id": 6,
+      "category_slug": "tumor_markers",
+      "name_en": "General Tumor Markers Profile",
+      "name_ar": "مجموعة دلالات الأورام العامة",
+      "description_en": "General tumor markers profile.",
+      "description_ar": "مجموعة عامة من دلالات الأورام.",
+      "tests_count": 6,
+      "sort_order": 3,
+      "is_active": true
+    },
+    {
+      "id": "culture_profile_025",
+      "category_id": 7,
+      "category_slug": "microbiology_cultures",
+      "name_en": "Culture Profile",
+      "name_ar": "مجموعة المزارع",
+      "description_en": "Common culture tests profile.",
+      "description_ar": "مجموعة مزارع ميكروبية شائعة.",
+      "tests_count": 4,
+      "sort_order": 1,
+      "is_active": true
+    },
+    {
+      "id": "routine_body_fluids_profile_026",
+      "category_id": 8,
+      "category_slug": "body_fluids_parasitology",
+      "name_en": "Routine Body Fluids Profile",
+      "name_ar": "مجموعة تحاليل السوائل الروتينية",
+      "description_en": "Routine urine and stool investigations.",
+      "description_ar": "مجموعة تحاليل البول والبراز الروتينية.",
+      "tests_count": 3,
+      "sort_order": 1,
+      "is_active": true
+    },
+    {
+      "id": "pregnancy_profile_027",
+      "category_id": 8,
+      "category_slug": "body_fluids_parasitology",
+      "name_en": "Pregnancy Profile",
+      "name_ar": "مجموعة اختبارات الحمل",
+      "description_en": "Pregnancy screening and confirmation profile.",
+      "description_ar": "مجموعة فحوصات الحمل المبدئية والتأكيدية.",
+      "tests_count": 2,
+      "sort_order": 2,
+      "is_active": true
+    },
+    {
+      "id": "therapeutic_drug_monitoring_028",
+      "category_id": 9,
+      "category_slug": "toxicology_tdm",
+      "name_en": "Therapeutic Drug Monitoring (TDM) Profile",
+      "name_ar": "مجموعة متابعة مستويات الأدوية",
+      "description_en": "Therapeutic drug monitoring profile.",
+      "description_ar": "مجموعة متابعة مستويات الأدوية العلاجية.",
+      "tests_count": 3,
+      "sort_order": 1,
+      "is_active": true
+    },
+    {
+      "id": "toxicology_screen_029",
+      "category_id": 9,
+      "category_slug": "toxicology_tdm",
+      "name_en": "Toxicology Screen",
+      "name_ar": "مجموعة السموم والمخدرات",
+      "description_en": "Toxicology and drug exposure screening.",
+      "description_ar": "مجموعة فحوصات السموم وتعاطي المواد.",
+      "tests_count": 2,
+      "sort_order": 2,
+      "is_active": true
+    },
+    {
+      "id": "viral_pcr_profile_030",
+      "category_id": 10,
+      "category_slug": "molecular_biology_pcr",
+      "name_en": "Viral PCR Profile",
+      "name_ar": "مجموعة PCR الفيروسات",
+      "description_en": "Common viral PCR tests.",
+      "description_ar": "مجموعة تحاليل PCR الفيروسية الشائعة.",
+      "tests_count": 3,
+      "sort_order": 1,
+      "is_active": true
+    }
+  ],
+  "lab_test_group_items": [
+    {
+      "group_id": "diabetes_profile_001",
+      "test_id": "fbs_001",
+      "sort_order": 1
+    },
+    {
+      "group_id": "diabetes_profile_001",
+      "test_id": "ppbs_002",
+      "sort_order": 2
+    },
+    {
+      "group_id": "diabetes_profile_001",
+      "test_id": "rbs_003",
+      "sort_order": 3
+    },
+    {
+      "group_id": "diabetes_profile_001",
+      "test_id": "hba1c_004",
+      "sort_order": 4
+    },
+    {
+      "group_id": "liver_function_profile_002",
+      "test_id": "alt_005",
+      "sort_order": 1
+    },
+    {
+      "group_id": "liver_function_profile_002",
+      "test_id": "ast_006",
+      "sort_order": 2
+    },
+    {
+      "group_id": "liver_function_profile_002",
+      "test_id": "alp_007",
+      "sort_order": 3
+    },
+    {
+      "group_id": "liver_function_profile_002",
+      "test_id": "ggt_008",
+      "sort_order": 4
+    },
+    {
+      "group_id": "liver_function_profile_002",
+      "test_id": "bil_t_009",
+      "sort_order": 5
+    },
+    {
+      "group_id": "liver_function_profile_002",
+      "test_id": "bil_d_010",
+      "sort_order": 6
+    },
+    {
+      "group_id": "liver_function_profile_002",
+      "test_id": "alb_011",
+      "sort_order": 7
+    },
+    {
+      "group_id": "liver_function_profile_002",
+      "test_id": "tp_012",
+      "sort_order": 8
+    },
+    {
+      "group_id": "kidney_function_profile_003",
+      "test_id": "urea_013",
+      "sort_order": 1
+    },
+    {
+      "group_id": "kidney_function_profile_003",
+      "test_id": "creat_014",
+      "sort_order": 2
+    },
+    {
+      "group_id": "kidney_function_profile_003",
+      "test_id": "uric_015",
+      "sort_order": 3
+    },
+    {
+      "group_id": "lipid_profile_004",
+      "test_id": "chol_016",
+      "sort_order": 1
+    },
+    {
+      "group_id": "lipid_profile_004",
+      "test_id": "tg_017",
+      "sort_order": 2
+    },
+    {
+      "group_id": "lipid_profile_004",
+      "test_id": "hdl_018",
+      "sort_order": 3
+    },
+    {
+      "group_id": "lipid_profile_004",
+      "test_id": "ldl_019",
+      "sort_order": 4
+    },
+    {
+      "group_id": "iron_profile_005",
+      "test_id": "iron_020",
+      "sort_order": 1
+    },
+    {
+      "group_id": "iron_profile_005",
+      "test_id": "tibc_021",
+      "sort_order": 2
+    },
+    {
+      "group_id": "electrolyte_profile_006",
+      "test_id": "na_022",
+      "sort_order": 1
+    },
+    {
+      "group_id": "electrolyte_profile_006",
+      "test_id": "k_023",
+      "sort_order": 2
+    },
+    {
+      "group_id": "electrolyte_profile_006",
+      "test_id": "cl_024",
+      "sort_order": 3
+    },
+    {
+      "group_id": "electrolyte_profile_006",
+      "test_id": "ca_025",
+      "sort_order": 4
+    },
+    {
+      "group_id": "electrolyte_profile_006",
+      "test_id": "mg_026",
+      "sort_order": 5
+    },
+    {
+      "group_id": "electrolyte_profile_006",
+      "test_id": "phos_027",
+      "sort_order": 6
+    },
+    {
+      "group_id": "pancreatic_enzymes_profile_007",
+      "test_id": "amy_028",
+      "sort_order": 1
+    },
+    {
+      "group_id": "pancreatic_enzymes_profile_007",
+      "test_id": "lip_029",
+      "sort_order": 2
+    },
+    {
+      "group_id": "cardiac_markers_profile_008",
+      "test_id": "ck_030",
+      "sort_order": 1
+    },
+    {
+      "group_id": "cardiac_markers_profile_008",
+      "test_id": "ckmb_031",
+      "sort_order": 2
+    },
+    {
+      "group_id": "cardiac_markers_profile_008",
+      "test_id": "trop_032",
+      "sort_order": 3
+    },
+    {
+      "group_id": "cbc_profile_009",
+      "test_id": "hgb_033",
+      "sort_order": 1
+    },
+    {
+      "group_id": "cbc_profile_009",
+      "test_id": "rbc_034",
+      "sort_order": 2
+    },
+    {
+      "group_id": "cbc_profile_009",
+      "test_id": "wbc_035",
+      "sort_order": 3
+    },
+    {
+      "group_id": "cbc_profile_009",
+      "test_id": "plt_036",
+      "sort_order": 4
+    },
+    {
+      "group_id": "cbc_profile_009",
+      "test_id": "hct_037",
+      "sort_order": 5
+    },
+    {
+      "group_id": "cbc_profile_009",
+      "test_id": "mcv_038",
+      "sort_order": 6
+    },
+    {
+      "group_id": "coagulation_profile_010",
+      "test_id": "pt_040",
+      "sort_order": 1
+    },
+    {
+      "group_id": "coagulation_profile_010",
+      "test_id": "inr_041",
+      "sort_order": 2
+    },
+    {
+      "group_id": "coagulation_profile_010",
+      "test_id": "ptt_042",
+      "sort_order": 3
+    },
+    {
+      "group_id": "coagulation_profile_010",
+      "test_id": "bt_044",
+      "sort_order": 4
+    },
+    {
+      "group_id": "coagulation_profile_010",
+      "test_id": "ct_045",
+      "sort_order": 5
+    },
+    {
+      "group_id": "coagulation_profile_010",
+      "test_id": "fib_046",
+      "sort_order": 6
+    },
+    {
+      "group_id": "anemia_followup_profile_011",
+      "test_id": "hgb_033",
+      "sort_order": 1
+    },
+    {
+      "group_id": "anemia_followup_profile_011",
+      "test_id": "rbc_034",
+      "sort_order": 2
+    },
+    {
+      "group_id": "anemia_followup_profile_011",
+      "test_id": "hct_037",
+      "sort_order": 3
+    },
+    {
+      "group_id": "anemia_followup_profile_011",
+      "test_id": "mcv_038",
+      "sort_order": 4
+    },
+    {
+      "group_id": "anemia_followup_profile_011",
+      "test_id": "retic_043",
+      "sort_order": 5
+    },
+    {
+      "group_id": "thyroid_profile_012",
+      "test_id": "tsh_047",
+      "sort_order": 1
+    },
+    {
+      "group_id": "thyroid_profile_012",
+      "test_id": "ft4_048",
+      "sort_order": 2
+    },
+    {
+      "group_id": "thyroid_profile_012",
+      "test_id": "ft3_049",
+      "sort_order": 3
+    },
+    {
+      "group_id": "female_hormone_profile_013",
+      "test_id": "fsh_051",
+      "sort_order": 1
+    },
+    {
+      "group_id": "female_hormone_profile_013",
+      "test_id": "lh_052",
+      "sort_order": 2
+    },
+    {
+      "group_id": "female_hormone_profile_013",
+      "test_id": "e2_053",
+      "sort_order": 3
+    },
+    {
+      "group_id": "female_hormone_profile_013",
+      "test_id": "prog_054",
+      "sort_order": 4
+    },
+    {
+      "group_id": "female_hormone_profile_013",
+      "test_id": "prol_050",
+      "sort_order": 5
+    },
+    {
+      "group_id": "male_hormone_profile_014",
+      "test_id": "test_055",
+      "sort_order": 1
+    },
+    {
+      "group_id": "male_hormone_profile_014",
+      "test_id": "prol_050",
+      "sort_order": 2
+    },
+    {
+      "group_id": "male_hormone_profile_014",
+      "test_id": "fsh_051",
+      "sort_order": 3
+    },
+    {
+      "group_id": "male_hormone_profile_014",
+      "test_id": "lh_052",
+      "sort_order": 4
+    },
+    {
+      "group_id": "vitamins_profile_015",
+      "test_id": "vitd_058",
+      "sort_order": 1
+    },
+    {
+      "group_id": "vitamins_profile_015",
+      "test_id": "vitb12_059",
+      "sort_order": 2
+    },
+    {
+      "group_id": "vitamins_profile_015",
+      "test_id": "fol_060",
+      "sort_order": 3
+    },
+    {
+      "group_id": "metabolic_profile_016",
+      "test_id": "ins_057",
+      "sort_order": 1
+    },
+    {
+      "group_id": "metabolic_profile_016",
+      "test_id": "cort_056",
+      "sort_order": 2
+    },
+    {
+      "group_id": "metabolic_profile_016",
+      "test_id": "gh_062",
+      "sort_order": 3
+    },
+    {
+      "group_id": "metabolic_profile_016",
+      "test_id": "fer_061",
+      "sort_order": 4
+    },
+    {
+      "group_id": "hepatitis_viral_screen_017",
+      "test_id": "hcv_066",
+      "sort_order": 1
+    },
+    {
+      "group_id": "hepatitis_viral_screen_017",
+      "test_id": "hbsag_067",
+      "sort_order": 2
+    },
+    {
+      "group_id": "arthritis_inflammation_profile_018",
+      "test_id": "crp_063",
+      "sort_order": 1
+    },
+    {
+      "group_id": "arthritis_inflammation_profile_018",
+      "test_id": "aso_064",
+      "sort_order": 2
+    },
+    {
+      "group_id": "arthritis_inflammation_profile_018",
+      "test_id": "rf_065",
+      "sort_order": 3
+    },
+    {
+      "group_id": "arthritis_inflammation_profile_018",
+      "test_id": "ana_069",
+      "sort_order": 4
+    },
+    {
+      "group_id": "infectious_disease_screen_019",
+      "test_id": "hiv_068",
+      "sort_order": 1
+    },
+    {
+      "group_id": "infectious_disease_screen_019",
+      "test_id": "vdrl_071",
+      "sort_order": 2
+    },
+    {
+      "group_id": "infectious_disease_screen_019",
+      "test_id": "bru_072",
+      "sort_order": 3
+    },
+    {
+      "group_id": "infectious_disease_screen_019",
+      "test_id": "typh_073",
+      "sort_order": 4
+    },
+    {
+      "group_id": "infectious_disease_screen_019",
+      "test_id": "toxo_070",
+      "sort_order": 5
+    },
+    {
+      "group_id": "autoimmune_profile_020",
+      "test_id": "dsdna_101",
+      "sort_order": 1
+    },
+    {
+      "group_id": "autoimmune_profile_020",
+      "test_id": "ccp_102",
+      "sort_order": 2
+    },
+    {
+      "group_id": "autoimmune_profile_020",
+      "test_id": "ant_tpo_105",
+      "sort_order": 3
+    },
+    {
+      "group_id": "complement_profile_021",
+      "test_id": "c3_103",
+      "sort_order": 1
+    },
+    {
+      "group_id": "complement_profile_021",
+      "test_id": "c4_104",
+      "sort_order": 2
+    },
+    {
+      "group_id": "female_tumor_markers_022",
+      "test_id": "ca125_078",
+      "sort_order": 1
+    },
+    {
+      "group_id": "female_tumor_markers_022",
+      "test_id": "ca153_079",
+      "sort_order": 2
+    },
+    {
+      "group_id": "female_tumor_markers_022",
+      "test_id": "ca199_080",
+      "sort_order": 3
+    },
+    {
+      "group_id": "female_tumor_markers_022",
+      "test_id": "cea_076",
+      "sort_order": 4
+    },
+    {
+      "group_id": "female_tumor_markers_022",
+      "test_id": "afp_077",
+      "sort_order": 5
+    },
+    {
+      "group_id": "male_tumor_markers_023",
+      "test_id": "psa_075",
+      "sort_order": 1
+    },
+    {
+      "group_id": "male_tumor_markers_023",
+      "test_id": "cea_076",
+      "sort_order": 2
+    },
+    {
+      "group_id": "male_tumor_markers_023",
+      "test_id": "afp_077",
+      "sort_order": 3
+    },
+    {
+      "group_id": "male_tumor_markers_023",
+      "test_id": "ca199_080",
+      "sort_order": 4
+    },
+    {
+      "group_id": "general_tumor_markers_024",
+      "test_id": "cea_076",
+      "sort_order": 1
+    },
+    {
+      "group_id": "general_tumor_markers_024",
+      "test_id": "afp_077",
+      "sort_order": 2
+    },
+    {
+      "group_id": "general_tumor_markers_024",
+      "test_id": "ca125_078",
+      "sort_order": 3
+    },
+    {
+      "group_id": "general_tumor_markers_024",
+      "test_id": "ca153_079",
+      "sort_order": 4
+    },
+    {
+      "group_id": "general_tumor_markers_024",
+      "test_id": "ca199_080",
+      "sort_order": 5
+    },
+    {
+      "group_id": "general_tumor_markers_024",
+      "test_id": "psa_075",
+      "sort_order": 6
+    },
+    {
+      "group_id": "culture_profile_025",
+      "test_id": "cult_urin_107",
+      "sort_order": 1
+    },
+    {
+      "group_id": "culture_profile_025",
+      "test_id": "cult_st_108",
+      "sort_order": 2
+    },
+    {
+      "group_id": "culture_profile_025",
+      "test_id": "cult_bl_109",
+      "sort_order": 3
+    },
+    {
+      "group_id": "culture_profile_025",
+      "test_id": "gram_st_110",
+      "sort_order": 4
+    },
+    {
+      "group_id": "routine_body_fluids_profile_026",
+      "test_id": "urin_081",
+      "sort_order": 1
+    },
+    {
+      "group_id": "routine_body_fluids_profile_026",
+      "test_id": "stool_082",
+      "sort_order": 2
+    },
+    {
+      "group_id": "routine_body_fluids_profile_026",
+      "test_id": "ob_084",
+      "sort_order": 3
+    },
+    {
+      "group_id": "pregnancy_profile_027",
+      "test_id": "preg_085",
+      "sort_order": 1
+    },
+    {
+      "group_id": "pregnancy_profile_027",
+      "test_id": "b_preg_086",
+      "sort_order": 2
+    },
+    {
+      "group_id": "therapeutic_drug_monitoring_028",
+      "test_id": "phen_111",
+      "sort_order": 1
+    },
+    {
+      "group_id": "therapeutic_drug_monitoring_028",
+      "test_id": "carb_112",
+      "sort_order": 2
+    },
+    {
+      "group_id": "therapeutic_drug_monitoring_028",
+      "test_id": "vanc_113",
+      "sort_order": 3
+    },
+    {
+      "group_id": "toxicology_screen_029",
+      "test_id": "drug_087",
+      "sort_order": 1
+    },
+    {
+      "group_id": "toxicology_screen_029",
+      "test_id": "lead_088",
+      "sort_order": 2
+    },
+    {
+      "group_id": "viral_pcr_profile_030",
+      "test_id": "pcr_092",
+      "sort_order": 1
+    },
+    {
+      "group_id": "viral_pcr_profile_030",
+      "test_id": "hbv_pcr_114",
+      "sort_order": 2
+    },
+    {
+      "group_id": "viral_pcr_profile_030",
+      "test_id": "cov_115",
+      "sort_order": 3
+    }
+  ],
+  "meta": {
+    "generated_from": "tests_grouped.json",
+    "generated_at": "2026-04-08T23:40:38.500906Z",
+    "categories_count": 10,
+    "tests_count": 104,
+    "groups_count": 30,
+    "group_items_count": 116
+  }
+}

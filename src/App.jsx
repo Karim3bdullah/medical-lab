@@ -1,15 +1,19 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { LabProvider } from './context/LabContext';
+import React, { useEffect, useState } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+
+import { LabProvider, useLab } from './context/LabContext';
+import ToastProvider, { initToast, useToast } from './components/Toast';
+import ConfirmProvider, { initConfirm, useConfirm } from './components/ConfirmDialog';
+import ErrorBoundary from './components/ErrorBoundary';
+
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
 
-// 1️⃣ استيراد كافة الشاشات واللوحات الطبية المعتمدة حياً
 import Login from './pages/Login';
 import SuperAdminLogin from './pages/SuperAdminLogin';
 import Dashboard from './pages/Dashboard';
 import Patients from './pages/Patients';
-import CreateOrder from './pages/CreateOrder'; 
+import CreateOrder from './pages/CreateOrder';
 import SpecimenTracking from './pages/SpecimenTracking';
 import LabEntry from './pages/LabEntry';
 import Inventory from './pages/Inventory';
@@ -17,129 +21,265 @@ import MedicalReport from './pages/MedicalReport';
 import Financials from './pages/Financials';
 import Settings from './pages/Settings';
 import StaffManagement from './pages/StaffManagement';
-import SuperAdmin from './pages/SuperAdmin'; 
-import LabSupport from './components/LabSupport'; 
+import SuperAdmin from './pages/SuperAdmin';
+import LabSupport from './components/LabSupport';
 import AIAnalysis from './pages/AIAnalysis';
-import PatientPortal from './pages/PatientPortal';
+import PatientPortal, { PatientSharedReport, PatientReportVerification } from './pages/PatientPortal';
 import AppointmentsQueue from './pages/AppointmentsQueue';
 import InsuranceManagement from './pages/InsuranceManagement';
-
-// 🎯 استيراد شاشة شباك الاستعلام وتسليم التقارير الجديدة كلياً
 import DeliverReports from './pages/DeliverReports';
 
-// مكون البوابة لحماية روتات الـ Owner والـ Staff من الدخول المباشر بالمتصفح
-const RoleGate = ({ allowedRoles, children }) => {
-  const userRole = (localStorage.getItem('userRole') || 'staff').toLowerCase();
-  
-  if (!allowedRoles.includes(userRole)) {
-    alert("⚠️ عذراً، ليس لديك صلاحية الوصول إلى هذه الشاشة الطبيّة.");
-    return <Navigate to={userRole === 'owner' ? "/" : "/appointments-queue"} replace />;
-  }
-  return children;
+const GlobalSystemBridge = () => {
+  const { showToast } = useToast();
+  const { showConfirm } = useConfirm();
+
+  useEffect(() => {
+    initToast(showToast);
+    initConfirm(showConfirm);
+
+    return () => {
+      initToast(null);
+      initConfirm(null);
+    };
+  }, [showConfirm, showToast]);
+
+  return null;
 };
 
-const BannedScreen = () => {
-  const handleLogout = () => {
-    localStorage.clear();
-    window.location.href = '/login';
+const SystemStateCard = ({ icon, tone = 'warning', title, description, children }) => {
+  const toneClasses = {
+    danger: 'ui-status-danger',
+    warning: 'ui-status-warning',
+    info: 'ui-status-info',
   };
 
   return (
-    <div className="h-screen bg-slate-950 flex flex-col items-center justify-center text-white p-10 text-center" dir="rtl">
-      <div className="w-20 h-20 bg-red-500/10 rounded-2xl flex items-center justify-center text-red-500 mb-6 border border-red-500/20 animate-pulse">
-        <span className="material-symbols-outlined text-4xl">lock</span>
+    <section className="ui-surface-card w-full max-w-xl rounded-[2rem] p-6 text-center shadow-xl md:p-9">
+      <div
+        className={`mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border ${toneClasses[tone] || toneClasses.warning}`}
+        aria-hidden="true"
+      >
+        <span className="material-symbols-outlined text-4xl">{icon}</span>
       </div>
-      <h1 className="text-3xl font-black italic text-red-500">تم تعليق ترخيص المختبر سحابياً!</h1>
-      <p className="text-sm text-slate-400 font-bold mt-3 max-w-md leading-relaxed">
-        عفواً، تم إيقاف صلاحيات الوصول والوحدات الطرفية مؤقتاً من قبل الدعم المركزي. يرجى سداد مستحقات تجديد باقة الاشتراك السنوية للمنصة.
+      <h1 className="mt-5 text-2xl font-black text-[var(--text-primary)] md:text-3xl">{title}</h1>
+      <p className="mx-auto mt-3 max-w-lg text-sm font-bold leading-7 text-[var(--text-secondary)] md:text-base">
+        {description}
       </p>
-      <div className="mt-8 flex gap-4">
-        <a href="mailto:support@nexuslis.com" className="bg-red-600 hover:bg-red-500 text-white px-6 py-3 rounded-xl text-xs font-black shadow-lg shadow-red-600/20 transition-all">الاتصال بالدعم الفني</a>
-        <button onClick={handleLogout} className="bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 px-6 py-3 rounded-xl text-xs font-bold">تسجيل الخروج</button>
-      </div>
-    </div>
+      {children ? <div className="mt-7">{children}</div> : null}
+    </section>
   );
 };
 
-// مكون وسيط ذكي لعزل الـ LabProvider عن حساب السوبر أدمن منعا لطلبات الـ Settings العشوائية
-const LabSectionWrapper = () => {
+const BannedScreen = () => {
+  const navigate = useNavigate();
+  const { currentUser, logout } = useLab();
+  const [loggingOut, setLoggingOut] = useState(false);
+
+  const handleLogout = async () => {
+    if (loggingOut) return;
+    setLoggingOut(true);
+    await logout();
+    navigate('/login', { replace: true });
+  };
+
   return (
-    <LabProvider>
-      <Layout />
-    </LabProvider>
+    <main className="ui-surface-page flex min-h-screen items-center justify-center p-4 text-center md:p-8" dir="rtl">
+      <SystemStateCard
+        icon="domain_disabled"
+        tone="danger"
+        title="المختبر غير متاح حالياً"
+        description="رفض الخادم استمرار جلسة المختبر الحالية. لا يعرض عقد المصادقة سبباً تفصيلياً أو إجراء استعادة داخل التطبيق، لذلك لن نفترض أن السبب متعلق بالدفع أو الاشتراك."
+      >
+        <div className="ui-surface-muted rounded-2xl border border-[var(--border-default)] p-4 text-right">
+          <p className="text-xs font-black text-[var(--text-muted)]">الحساب الحالي</p>
+          <p className="mt-2 break-words text-sm font-black text-[var(--text-primary)]">
+            {currentUser?.name || currentUser?.email || 'حساب المختبر'}
+          </p>
+          <p className="mt-2 text-xs font-bold leading-6 text-[var(--text-secondary)]">
+            تواصل مع مسؤول المنصة عبر القناة المعتمدة خارج النظام. لا توجد حالياً واجهة خادم آمنة لإعادة التفعيل من هذه الشاشة.
+          </p>
+        </div>
+        <button type="button" onClick={handleLogout} disabled={loggingOut} className="btn-secondary mt-4 w-full justify-center">
+          <span className="material-symbols-outlined text-lg" aria-hidden="true">logout</span>
+          {loggingOut ? 'جاري إنهاء الجلسة...' : 'إنهاء الجلسة والعودة للدخول'}
+        </button>
+      </SystemStateCard>
+    </main>
   );
 };
+
+const NoAccessScreen = () => (
+  <main className="flex min-h-[65vh] items-center justify-center px-4 py-10 text-center" dir="rtl">
+    <SystemStateCard
+      icon="admin_panel_settings"
+      tone="warning"
+      title="لا توجد شاشات تشغيل متاحة"
+      description="الحساب مصادق عليه، لكن الصلاحيات التي أعادها الخادم لا تسمح بفتح أي وحدة تشغيل حالية. لا يمنح التطبيق صلاحيات افتراضية ولا يتجاوز سياسة الخادم."
+    >
+      <div className="ui-surface-muted rounded-2xl border border-[var(--border-default)] p-4 text-sm font-bold leading-7 text-[var(--text-secondary)]">
+        يرجى التواصل مع مدير المختبر لتحديث الأدوار والصلاحيات.
+      </div>
+    </SystemStateCard>
+  </main>
+);
+
+const LabSectionWrapper = () => <Layout />;
+
+function AppContent() {
+  const { currentUser, getSafeLandingPath, canAccessPath } = useLab();
+  const userType = currentUser?.type;
+  const safeLandingPath = getSafeLandingPath();
+  const canAccessDashboard = canAccessPath('/');
+
+  return (
+    <ToastProvider>
+      <ConfirmProvider>
+        <GlobalSystemBridge />
+        <Router>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="/super-login" element={<SuperAdminLogin />} />
+            <Route path="/portal" element={<PatientPortal />} />
+            <Route path="/portal/results/:token" element={<PatientSharedReport />} />
+            <Route path="/portal/verify/:qrToken" element={<PatientReportVerification />} />
+            <Route path="/banned" element={<BannedScreen />} />
+
+            <Route element={<ProtectedRoute />}>
+              <Route
+                path="/"
+                element={
+                  userType === 'platform_admin' ? (
+                    <Navigate to="/master-admin" replace />
+                  ) : (
+                    <LabSectionWrapper />
+                  )
+                }
+              >
+                {userType === 'owner_doctor' && canAccessDashboard ? (
+                  <Route
+                    element={
+                      <ProtectedRoute
+                        requiredAllPermissions={[
+                          'patients.view',
+                          'orders.view',
+                          'invoices.view',
+                        ]}
+                      />
+                    }
+                  >
+                    <Route index element={<Dashboard />} />
+                  </Route>
+                ) : (
+                  <Route index element={<Navigate to={safeLandingPath} replace />} />
+                )}
+
+                <Route element={<ProtectedRoute requiredPermission="patients.view" />}>
+                  <Route path="patients" element={<Patients />} />
+                </Route>
+
+                <Route
+                  element={
+                    <ProtectedRoute
+                      requiredAllPermissions={['patients.view', 'orders.create']}
+                    />
+                  }
+                >
+                  <Route path="create-order" element={<CreateOrder />} />
+                </Route>
+
+                <Route element={<ProtectedRoute requiredPermission="orders.view" />}>
+                  <Route path="specimen-tracking" element={<SpecimenTracking />} />
+                  <Route path="appointments-queue" element={<AppointmentsQueue />} />
+                </Route>
+
+                <Route
+                  element={
+                    <ProtectedRoute
+                      requiredAllPermissions={['orders.view', 'results.view']}
+                    />
+                  }
+                >
+                  <Route path="deliver-reports" element={<DeliverReports />} />
+                  <Route path="report/:id" element={<MedicalReport />} />
+                </Route>
+
+                <Route element={<ProtectedRoute requiredPermission="invoices.view" />}>
+                  <Route path="financials" element={<Financials />} />
+                </Route>
+
+                <Route
+                  element={
+                    <ProtectedRoute
+                      requiredAnyPermissions={['insurance.view', 'claims.view']}
+                    />
+                  }
+                >
+                  <Route path="insurance-management" element={<InsuranceManagement />} />
+                </Route>
+
+                <Route element={<ProtectedRoute requiredPermission="inventory.view" />}>
+                  <Route path="inventory" element={<Inventory />} />
+                </Route>
+
+                <Route
+                  element={
+                    <ProtectedRoute
+                      requiredAllPermissions={['ocr.use', 'orders.view', 'results.enter']}
+                    />
+                  }
+                >
+                  <Route path="ai-analysis" element={<AIAnalysis />} />
+                </Route>
+
+                <Route
+                  element={
+                    <ProtectedRoute
+                      requiredAllPermissions={['orders.view', 'results.enter']}
+                    />
+                  }
+                >
+                  <Route path="entry" element={<LabEntry />} />
+                </Route>
+
+                <Route element={<ProtectedRoute requiredPermission="settings.view" />}>
+                  <Route path="settings" element={<Settings />} />
+                </Route>
+
+                <Route element={<ProtectedRoute requiredPermission="users.view" />}>
+                  <Route path="staff" element={<StaffManagement />} />
+                </Route>
+
+                <Route path="support" element={<LabSupport />} />
+                <Route path="no-access" element={<NoAccessScreen />} />
+              </Route>
+
+              <Route
+                path="/master-admin/*"
+                element={
+                  userType === 'platform_admin' ? (
+                    <SuperAdmin />
+                  ) : (
+                    <Navigate to={safeLandingPath} replace />
+                  )
+                }
+              />
+
+              <Route path="*" element={<Navigate to={safeLandingPath} replace />} />
+            </Route>
+          </Routes>
+        </Router>
+      </ConfirmProvider>
+    </ToastProvider>
+  );
+}
 
 function App() {
-  const userRole = localStorage.getItem('userRole');
-
   return (
-    <Router>
-      <Routes>
-        {/* مسارات تسجيل الدخول المفتوحة للجميع */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/super-login" element={<SuperAdminLogin />} />
-
-        {/* شاشة الحظر التلقائي للاشتراكات المنتهية */}
-        <Route path="/banned" element={<BannedScreen />} />
-
-        {/* بوابات المنظومة المؤمنة بالتوكن وبصمة الصلاحيات */}
-        <Route element={<ProtectedRoute />}>
-          
-          {/* 🚨 التوجيه التلقائي والذكي في الروت الرئيسي بناءً على رول الجلسة */}
-          <Route path="/" element={
-            userRole === 'superadmin' 
-              ? <Navigate to="/master-admin" replace /> 
-              : <LabSectionWrapper />
-          }>
-            {/* التوجيه الصارم للمريض إذا كان الـ Role هو patient أو التوجيه للوحة الإحصائيات للأونر */}
-            <Route index element={
-              userRole === 'patient' 
-                ? <Navigate to="/portal" replace /> 
-                : userRole === 'owner'
-                  ? <Dashboard />
-                  : <Navigate to="/appointments-queue" replace />
-            } />
-            
-            {/* 📑 مسارات موظفي الاستقبال والـ Staff (متاحة للـ staff والـ owner) */}
-            <Route path="patients" element={<RoleGate allowedRoles={['owner', 'staff']}><Patients /></RoleGate>} />
-            <Route path="create-order" element={<RoleGate allowedRoles={['owner', 'staff']}><CreateOrder /></RoleGate>} />
-            <Route path="specimen-tracking" element={<RoleGate allowedRoles={['owner', 'staff']}><SpecimenTracking /></RoleGate>} />
-            <Route path="financials" element={<RoleGate allowedRoles={['owner', 'staff']}><Financials /></RoleGate>} />
-            <Route path="insurance-management" element={<RoleGate allowedRoles={['owner', 'staff']}><InsuranceManagement /></RoleGate>} />
-            <Route path="appointments-queue" element={<RoleGate allowedRoles={['owner', 'staff']}><AppointmentsQueue /></RoleGate>} />
-            <Route path="inventory" element={<RoleGate allowedRoles={['owner', 'staff']}><Inventory /></RoleGate>} />
-            <Route path="ai-analysis" element={<RoleGate allowedRoles={['owner', 'staff']}><AIAnalysis /></RoleGate>} />
-            
-            {/* 🎯 حقن مسار شباك استعلام وتسليم التقارير المطور مالياً للاستاف والـ Owner */}
-            <Route path="deliver-reports" element={<RoleGate allowedRoles={['owner', 'staff']}><DeliverReports /></RoleGate>} />
-            
-            {/* 🖨️ روت نافذة معاينة وطباعة التقرير الطبي الحراري بناءً على الـ ID الديناميكي */}
-            <Route path="report/:id" element={<RoleGate allowedRoles={['owner', 'staff']}><MedicalReport /></RoleGate>} />
-
-            {/* 🔬 مسارات الدكتور الحصرية (Owner Only حالياً) */}
-            <Route path="entry" element={<RoleGate allowedRoles={['owner']}><LabEntry /></RoleGate>} />
-            <Route path="settings" element={<RoleGate allowedRoles={['owner']}><Settings /></RoleGate>} />
-            <Route path="staff" element={<RoleGate allowedRoles={['owner']}><StaffManagement /></RoleGate>} />
-            
-            {/* مسارات عامة للشركاء والمرضى */}
-            <Route path="support" element={<LabSupport />} />
-            <Route path="portal" element={<PatientPortal />} />
-          </Route>
-
-          {/* بوابة التحكم الفوقية للسوبر أدمن (مستقلة تماماً وخارج الـ LabProvider) */}
-          <Route path="/master-admin" element={
-            userRole === 'superadmin'
-              ? <SuperAdmin />
-              : <Navigate to="/" replace />
-          } />
-
-        </Route>
-
-        {/* إعادة التوجيه التلقائي لأي مسار مجهول */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </Router>
+    <ErrorBoundary>
+      <LabProvider>
+        <AppContent />
+      </LabProvider>
+    </ErrorBoundary>
   );
 }
 

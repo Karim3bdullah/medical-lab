@@ -1,109 +1,49 @@
-import React, { useState, useEffect, useRef } from 'react';
-import API from '../services/api';
+import React from 'react';
+import { useLab } from '../context/LabContext';
 
 const LabSupport = () => {
-  const [messages, setMessages] = useState([]);
-  const [text, setText] = useState('');
-  const chatBottomRef = useRef(null);
-  const [loading, setLoading] = useState(false);
-  
-  // جلب بيانات المستخدم الحالي المسجل من قاعدة البيانات
-  const loggedUser = JSON.parse(localStorage.getItem('logged_user')) || { name: 'مدير المختبر' };
-
-  // دالة جلب رسائل تذكرة الدعم الفني الخاصة بالمعمل من السيرفر
-  const fetchMessages = async () => {
-    try {
-      // السيرفر يعزل تذاكر الدعم تلقائياً بناءً على الـ Tenant (المعمل الحالي)
-      const response = await API.get('/support/messages'); 
-      setMessages(response.data.data || []);
-    } catch (err) {
-      console.error("خطأ في تحديث محادثة الدعم من السيرفر:", err);
-    }
-  };
-
-  useEffect(() => {
-    fetchMessages();
-    
-    // التحديث التلقائي لمحاكاة التشات الحي والمباشر كل 3 ثوانٍ من السيرفر
-    const interval = setInterval(() => {
-      fetchMessages();
-    }, 3000);
-    
-    return () => clearInterval(interval);
-  }, []);
-
-  useEffect(() => { 
-    chatBottomRef.current?.scrollIntoView({ behavior: 'smooth' }); 
-  }, [messages]);
-
-  // دالة إرسال رسالة دعم فني جديدة للباك إند المركزي للمنصة
-  const handleSend = async (e) => {
-    e.preventDefault();
-    if (!text.trim()) return;
-
-    const messageContent = text.trim();
-    setText(''); // مسح المدخل فوراً لتجربة مستخدم سريعة
-
-    try {
-      await API.post('/support/messages', {
-        text: messageContent
-      });
-      fetchMessages(); // إعادة تحديث الشات فوراً بعد الإرسال الناجح
-    } catch (err) {
-      alert("تعذر إرسال الرسالة للسيرفر: " + (err.response?.data?.message || err.message));
-    }
-  };
+  const { currentUser } = useLab();
+  const tenantName = currentUser?.tenant?.name || currentUser?.tenant_name || null;
 
   return (
-    <div className="bg-white border border-slate-100 rounded-[2.5rem] shadow-sm flex flex-col h-[calc(100vh-160px)] overflow-hidden text-right animate-in fade-in duration-300" dir="rtl">
-      {/* هيدر غرفة الدعم */}
-      <div className="p-6 bg-slate-50 border-b flex justify-between items-center">
-        <div>
-          <h3 className="text-base font-black text-slate-800">غرفة الاتصال المركزي والتعاقدات (Live Helpdesk)</h3>
-          <p className="text-[10px] text-slate-400 font-bold mt-0.5">خط مباشر مشفر ومحمي مع الإدارة العليا للمنصة</p>
+    <main className="flex min-h-[70vh] items-center justify-center p-4 text-right md:p-8" dir="rtl">
+      <section className="ui-surface-card w-full max-w-3xl rounded-[2rem] p-5 text-center shadow-xl sm:p-7 md:p-10" aria-labelledby="support-unavailable-title">
+        <div className="ui-status-warning mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border" aria-hidden="true">
+          <span className="material-symbols-outlined text-4xl">support_agent</span>
         </div>
-        <span className="material-symbols-outlined text-indigo-600">contact_support</span>
-      </div>
 
-      {/* منطقة الرسائل الحية */}
-      <div className="flex-1 p-6 overflow-y-auto space-y-4 bg-slate-50/10 custom-scroll">
-        {messages.length === 0 ? (
-          <div className="h-full flex flex-col items-center justify-center text-slate-400 font-bold">
-            <span className="material-symbols-outlined text-4xl mb-2 animate-pulse">forum</span>
-            <p className="text-xs">اكتب أي استفسار مالي أو فني بخصوص ترخيصك وسيقوم الدعم الفني بالرد الفوري</p>
-          </div>
-        ) : (
-          messages.map(msg => {
-            // التحقق من هوية المرسل (إذا كان الأدمن الحالي أو السوبر أدمن التابع للمنصة)
-            const isMe = msg.sender === 'Admin' || msg.user_id === loggedUser.id;
-            return (
-              <div key={msg.id} className={`flex flex-col ${isMe ? 'items-start' : 'items-end'}`}>
-                <span className="text-[9px] text-slate-400 mb-1 px-1">{isMe ? 'أنت' : 'الدعم الفني المركزي'}</span>
-                <div className={`max-w-md p-4 rounded-3xl text-xs font-bold leading-relaxed shadow-sm ${isMe ? 'bg-indigo-600 text-white rounded-tr-none' : 'bg-white text-slate-800 border border-slate-100 rounded-tl-none'}`}>
-                  <p className="whitespace-pre-wrap">{msg.text}</p>
-                  <span className="text-[8px] opacity-60 block mt-1.5 font-mono text-left" dir="ltr">{msg.time || msg.created_at?.split('T')[1]?.substring(0, 5)}</span>
-                </div>
-              </div>
-            );
-          })
-        )}
-        <div ref={chatBottomRef} />
-      </div>
+        <p className="mt-5 text-xs font-black uppercase tracking-[0.14em] text-[var(--status-warning-text)]">Blocked by BR-013</p>
+        <h1 id="support-unavailable-title" className="mt-2 text-2xl font-black text-[var(--text-primary)] md:text-3xl">
+          الدعم داخل النظام غير متاح حالياً
+        </h1>
+        <p className="mx-auto mt-4 max-w-2xl text-sm font-bold leading-7 text-[var(--text-secondary)] md:text-base">
+          لا توجد واجهات خادم معتمدة لإنشاء تذاكر الدعم أو قراءة الرسائل أو إرسال الردود. لذلك لا تعرض الصفحة محادثة وهمية، ولا تنفذ تحديثاً دورياً، ولا تحفظ رسائل محلياً.
+        </p>
 
-      {/* نموذج الإرسال المباشر */}
-      <form onSubmit={handleSend} className="p-4 bg-white border-t flex gap-2">
-        <input 
-          type="text" 
-          placeholder="اكتب رسالتك بالتفصيل هنا مهندس..." 
-          className="flex-1 bg-slate-100 rounded-xl px-5 py-3.5 text-xs font-bold border-none outline-none focus:bg-slate-50 focus:ring-2 focus:ring-indigo-500/20 transition-all text-right"
-          value={text} 
-          onChange={e => setText(e.target.value)} 
-        />
-        <button type="submit" className="bg-indigo-600 hover:bg-slate-800 text-white px-6 rounded-xl flex items-center justify-center transition-all shadow-lg shadow-indigo-600/10">
-          <span className="material-symbols-outlined text-sm">send</span>
-        </button>
-      </form>
-    </div>
+        <div className="mt-7 grid gap-4 text-right md:grid-cols-2">
+          <article className="ui-surface-muted rounded-2xl border border-[var(--border-default)] p-4">
+            <p className="text-xs font-black text-[var(--text-muted)]">الحساب الحالي</p>
+            <p className="mt-2 break-words text-sm font-black text-[var(--text-primary)]">
+              {currentUser?.name || currentUser?.email || 'مستخدم المختبر'}
+            </p>
+            {tenantName ? (
+              <p className="mt-1 break-words text-xs font-bold text-[var(--text-secondary)]">{tenantName}</p>
+            ) : null}
+          </article>
+
+          <article className="ui-surface-muted rounded-2xl border border-[var(--border-default)] p-4">
+            <p className="text-xs font-black text-[var(--text-muted)]">السلوك الحالي</p>
+            <p className="mt-2 text-sm font-bold leading-6 text-[var(--text-secondary)]">
+              استخدم قناة الدعم المعتمدة خارج النظام إلى أن يضيف فريق الخادم عقد التذاكر والرسائل الموثق في BR-013.
+            </p>
+          </article>
+        </div>
+
+        <div className="ui-status-info mt-6 rounded-2xl border p-4 text-right text-xs font-bold leading-6">
+          لا يتم إرسال أي طلب شبكي من هذه الصفحة، ولا يتم إنشاء رقم تذكرة، ولا يظهر نجاح زائف.
+        </div>
+      </section>
+    </main>
   );
 };
 

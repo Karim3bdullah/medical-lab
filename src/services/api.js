@@ -1,35 +1,45 @@
 import axios from 'axios';
 
 const API = axios.create({
-  baseURL: 'https://labnet.ruaada.com/api/v1',   
+  baseURL: 'https://labnet.ruaada.com/api/v1',
   headers: {
     'Content-Type': 'application/json',
-    'Accept': 'application/json',
+    Accept: 'application/json',
   },
   timeout: 15000,
-  withCredentials: false, 
+  withCredentials: false,
 });
 
-// إرفاق التوكن تلقائياً في الهيدرز مع كل ريكويست
 API.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
-  if (token) {
+  const hasExplicitAuthorization = Boolean(config.headers?.Authorization);
+
+  if (token && !hasExplicitAuthorization) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+
   return config;
 });
 
 API.interceptors.response.use(
-  response => response,
-  error => {
+  (response) => response,
+  (error) => {
     if (error.response?.status === 401) {
-      localStorage.clear();
-      if (window.location.pathname !== '/login') {
-        window.location.href = '/login';
+      localStorage.removeItem('token');
+      ['isAuthenticated', 'userName', 'userRole', 'tenantSlug'].forEach((key) =>
+        localStorage.removeItem(key),
+      );
+
+      const isPlatformPath = window.location.pathname.startsWith('/master-admin');
+      const target = isPlatformPath ? '/super-login' : '/login';
+
+      if (window.location.pathname !== target) {
+        window.location.href = target;
       }
     }
+
     return Promise.reject(error);
-  }
+  },
 );
 
 export default API;

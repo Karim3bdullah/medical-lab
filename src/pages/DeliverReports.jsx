@@ -1,184 +1,287 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import API from '../services/api';
+import PageHeader from '../components/PageHeader';
+import LoadingSpinner, { AsyncState } from '../components/LoadingSpinner';
+import { useToastSystem } from '../components/Toast';
+
+const REPORT_READY_STATUSES = new Set(['published', 'delivered']);
+
+const ORDER_STATUS_LABELS = {
+  pending: 'بانتظار سحب العينة',
+  sample_collection: 'مرحلة العينة',
+  in_progress: 'قيد التحليل',
+  partially_completed: 'مكتمل جزئياً',
+  completed: 'مكتمل',
+  cancelled: 'ملغي',
+};
+
+const RESULT_STATUS_LABELS = {
+  pending: 'بانتظار الإدخال',
+  in_progress: 'قيد الإدخال',
+  reviewed: 'تمت المراجعة',
+  approved: 'معتمد',
+  published: 'منشور',
+  delivered: 'تم التسليم',
+};
+
+const RESULT_STATUS_CLASSES = {
+  pending: 'ui-status-pending',
+  in_progress: 'ui-status-info',
+  reviewed: 'ui-status-info',
+  approved: 'ui-status-success',
+  published: 'ui-status-success',
+  delivered: 'ui-status-neutral',
+};
+
+const getErrorMessage = (error, fallback) =>
+  error?.response?.data?.message || error?.message || fallback;
+
+const isCancelledRequest = (error) =>
+  error?.code === 'ERR_CANCELED' || error?.name === 'CanceledError';
+
+const formatDate = (value) =>
+  value ? new Date(value).toLocaleString('ar-EG') : 'غير متاح';
 
 const DeliverReports = () => {
+  const navigate = useNavigate();
+  const toast = useToastSystem();
+  const requestControllerRef = useRef(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(false);
-  const [order, setOrder] = useState(null); // الطلب المجلوب
-  const [collectAmount, setCollectAmount] = useState('');
-  const [submittingPayment, setSubmittingPayment] = useState(false);
+  const [order, setOrder] = useState(null);
+  const [resultDetails, setResultDetails] = useState({});
+  const [resultErrors, setResultErrors] = useState({});
+  const [error, setError] = useState('');
+  const [lookupAttempted, setLookupAttempted] = useState(false);
 
-  // البحث عن طلب المريض بكود الفاتورة أو معرف المريض الإداري
-  const handleSearchOrder = async (e) => {
-    e.preventDefault();
-    if (!searchQuery.trim()) return;
-    
-    setLoading(true);
-    setOrder(null);
-    try {
-      const response = await API.get(`/orders/${searchQuery.trim()}`);
-      setOrder(response.data?.data || response.data);
-    } catch (err) {
-      alert("⚠️ تعذر العثور على هذا الطلب الطبي. تأكد من كود الفاتورة الصحيح.");
-    } finally {
-      setLoading(false);
-    }
-  };
+  useEffect(() => () => requestControllerRef.current?.abort(), []);
 
-  // سداد المبلغ المتبقي حياً من نفس واجهة التسليم
-  const handleQuickPayment = async () => {
-    const amount = parseFloat(collectAmount);
-    const remaining = parseFloat(order?.amount_remaining) || 0;
+  const handleSearchOrder = async (event) => {
+    event.preventDefault();
+    const normalizedId = searchQuery.trim();
+    setLookupAttempted(true);
 
-    if (isNaN(amount) || amount <= 0 || amount > remaining) {
-      alert("⚠️ يرجى إدخال مبلغ تحصيل صحيح لا يتجاوز قيمة المتبقي.");
+    if (!/^\d+$/.test(normalizedId)) {
+      setError('أدخل رقم الطلب الداخلي بالأرقام فقط. البحث برقم الطلب أو المريض غير مدعوم في العقد الحالي.');
+      setOrder(null);
+      setResultDetails({});
+      setResultErrors({});
       return;
     }
 
-    setSubmittingPayment(true);
-    try {
-      await API.post(`/orders/${order.id}/payments`, {
-        amount_paid: amount,
-        notes: "تسوية نقدية فورية من شباك تسليم التقارير"
-      });
+    requestControllerRef.current?.abort();
+    const controller = new AbortController();
+    requestControllerRef.current = controller;
 
-      alert("✅ تم تحصيل النقدية وتحديث حساب الطلب بنجاح!");
-      setCollectAmount('');
-      
-      // تحديث البيانات حياً بعد السداد لفتح أزرار الطباعة
-      const refresh = await API.get(`/orders/${order.id}`);
-      setOrder(refresh.data?.data || refresh.data);
-    } catch (err) {
-      alert("فشل تحديث الخزنة: " + (err.response?.data?.message || err.message));
+    setLoading(true);
+    setError('');
+    setOrder(null);
+    setResultDetails({});
+    setResultErrors({});
+
+    try {
+      const response = await API.get(`/orders/${normalizedId}`, { signal: controller.signal });
+      const fetchedOrder = response.data?.data;
+      if (!fetchedOrder || Number(fetchedOrder.id) !== Number(normalizedId) || !Array.isArray(fetchedOrder.items)) {
+        throw new Error('استجابة الطلب غير متوافقة مع العقد الحالي.');
+      }
+      setOrder(fetchedOrder);
+
+      const resultItems = fetchedOrder.items.filter((item) => Number.isInteger(Number(item?.result?.id)));
+      const settled = await Promise.allSettled(
+        resultItems.map(async (item) => {
+          const resultResponse = await API.get(`/results/${item.result.id}`, { signal: controller.signal });
+          const result = resultResponse.data?.data;
+          if (!result?.id || Number(result.id) !== Number(item.result.id)) {
+            throw new Error('استجابة النتيجة غير متوافقة مع العقد الحالي.');
+          }
+          return { resultId: item.result.id, result };
+        }),
+      );
+
+      if (controller.signal.aborted) return;
+      const details = {};
+      const failures = {};
+      settled.forEach((entry, index) => {
+        const resultId = resultItems[index].result.id;
+        if (entry.status === 'fulfilled') {
+          details[resultId] = entry.value.result;
+        } else if (!isCancelledRequest(entry.reason)) {
+          failures[resultId] = getErrorMessage(entry.reason, 'تعذر تحميل تفاصيل هذه النتيجة.');
+        }
+      });
+      setResultDetails(details);
+      setResultErrors(failures);
+    } catch (requestError) {
+      if (!isCancelledRequest(requestError)) {
+        setError(getErrorMessage(requestError, 'تعذر تحميل الطلب. تأكد من رقم الطلب وصلاحية الوصول.'));
+      }
     } finally {
-      setSubmittingPayment(false);
+      if (requestControllerRef.current === controller && !controller.signal.aborted) setLoading(false);
     }
   };
 
-  const remainingAmount = parseFloat(order?.amount_remaining) || 0;
-  // فحص هل الدكتور خلص كتابة النتائج واعتمدها أم لا
-  const isApprovedByDoctor = order?.status === 'approved'; 
+  const reportItems = useMemo(
+    () => (order?.items || []).filter((item) => item.result?.id),
+    [order],
+  );
+
+  const readyItems = useMemo(
+    () => reportItems.filter((item) => {
+      const status = resultDetails[item.result.id]?.status || item.result?.status;
+      return REPORT_READY_STATUSES.has(status);
+    }),
+    [reportItems, resultDetails],
+  );
+
+  const canOpenReport = readyItems.length > 0;
+
+  const openReport = () => {
+    if (!canOpenReport) {
+      toast.warning('لا توجد نتيجة منشورة أو مسلّمة قابلة للطباعة داخل هذا الطلب.');
+      return;
+    }
+    navigate(`/report/${order.id}`);
+  };
 
   return (
-    <div className="flex-1 bg-slate-50 p-8 text-right font-sans min-h-screen" dir="rtl">
-      <header className="mb-8">
-        <h1 className="text-2xl font-black text-slate-900 flex items-center gap-2">
-          <span className="material-symbols-outlined text-3xl text-primary">print</span> شباك الاستعلام وتسليم التقارير الطبية
-        </h1>
-        <p className="text-xs text-slate-400 font-bold mt-1">ابحث عن المريض لتسليم النتائج المعتمدة وتصفية الحسابات المالية آلياً</p>
-      </header>
+    <div className="ui-surface-page min-h-screen flex-1 p-4 text-right md:p-8" dir="rtl">
+      <PageHeader
+        title="جاهزية التقارير الطبية"
+        description="فحص النتائج المنشورة داخل طلب محدد وفتح النسخة القابلة للطباعة دون ادعاء التسليم أو المشاركة"
+        icon="print"
+      />
 
-      {/* بار البحث المركزي */}
-      <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm max-w-2xl mb-8">
-        <form onSubmit={handleSearchOrder} className="flex gap-3">
-          <input 
-            type="text" 
-            placeholder="أدخل كود طلب الفحص أو الفاتورة (مثال: 14)..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="flex-1 p-3.5 border border-slate-200 rounded-2xl text-xs font-bold outline-none focus:border-primary bg-slate-50"
-          />
-          <button type="submit" className="bg-primary text-white px-6 py-3.5 rounded-2xl text-xs font-black hover:bg-slate-800 transition-colors">
-            {loading ? 'جاري الفحص...' : 'استعلام عن الحالة'}
+      <section className="ui-surface-card mb-6 max-w-3xl rounded-2xl p-5">
+        <form onSubmit={handleSearchOrder} className="flex flex-col gap-3 sm:flex-row">
+          <label className="ui-form-field flex-1">
+            <span className="ui-field-label">معرّف الطلب الداخلي</span>
+            <input
+              type="text"
+              inputMode="numeric"
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              placeholder="مثال: 123"
+              className="lims-input w-full"
+            />
+          </label>
+          <button type="submit" disabled={loading} className="btn-primary self-end px-6 py-3 sm:min-w-36">
+            {loading ? 'جاري التحميل...' : 'عرض الطلب'}
           </button>
         </form>
-      </div>
+        <div className="ui-status-info mt-4 rounded-xl border p-3 text-xs font-bold leading-6">
+          واجهة الخادم الحالية تدعم الاستعلام المباشر بمعرّف قاعدة البيانات الرقمي فقط. البحث برقم الطلب أو اسم المريض أو الباركود وقائمة التسليم العامة غير متاحة بعد.
+        </div>
+      </section>
 
-      {/* عرض تفاصيل الحالة والحساب لو وُجد الطلب */}
-      {order && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 max-w-5xl animate-in fade-in duration-200">
-          
-          {/* الكارت الأيمن: تفاصيل الملف الطبي والفحوصات */}
-          <div className="lg:col-span-2 space-y-4">
-            <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
-              <div className="flex justify-between items-start border-b pb-4 mb-4">
-                <div>
-                  <span className="text-[10px] font-mono font-black text-primary bg-slate-100 px-2.5 py-1 rounded-md">ORD-#{order.id}</span>
-                  <h3 className="font-black text-slate-800 text-base mt-2">👤 المريض: {order.patient?.full_name || `${order.patient?.first_name} ${order.patient?.last_name}`}</h3>
-                </div>
-                <span className={`px-3 py-1 rounded-xl text-xs font-black ${isApprovedByDoctor ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' : 'bg-amber-50 text-amber-600 border border-amber-200 animate-pulse'}`}>
-                  {isApprovedByDoctor ? '✓ النتائج جاهزة ومعتمدة' : '⏳ قيد التحليل بالمختبر'}
-                </span>
+      {loading && <div className="ui-surface-card max-w-3xl rounded-2xl p-10"><LoadingSpinner message="جاري تحميل الطلب ونتائجه..." /></div>}
+
+      {!loading && error && (
+        <AsyncState
+          state="error"
+          title="تعذر تحميل الطلب"
+          message={error}
+          className="ui-surface-card max-w-3xl rounded-2xl p-8"
+        />
+      )}
+
+      {!loading && lookupAttempted && !error && !order && (
+        <AsyncState state="empty" title="لم يتم تحميل طلب" message="أدخل معرّفاً داخلياً صالحاً ثم أعد المحاولة." className="ui-surface-card max-w-3xl rounded-2xl p-8" />
+      )}
+
+      {!loading && order && (
+        <div className="max-w-6xl space-y-5">
+          <section className="ui-surface-card rounded-2xl p-5">
+            <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+              <div>
+                <p className="font-mono text-xs font-black text-[var(--brand-primary)]">{order.order_number || `#${order.id}`}</p>
+                <h2 className="mt-1 text-xl font-black text-[var(--text-primary)]">{order.patient?.full_name || 'مريض غير معروف'}</h2>
+                <p className="mt-1 text-xs font-bold text-[var(--text-muted)]">{order.patient?.patient_code || 'بدون كود مريض'}</p>
+                <p className="mt-2 text-xs text-[var(--text-secondary)]">تاريخ الطلب: {formatDate(order.ordered_at)}</p>
               </div>
-
-              <p className="text-xs font-black text-slate-400 mb-3 uppercase tracking-wider">الفحوصات المطلوبة داخل الطلب:</p>
               <div className="flex flex-wrap gap-2">
-                {order.items?.map(item => (
-                  <span key={item.id} className="text-xs font-bold bg-slate-50 text-slate-600 px-3 py-2 rounded-xl border">
-                    🔬 {item.test_name} {item.result_value && <strong className="text-primary mr-1">({item.result_value})</strong>}
-                  </span>
-                ))}
+                <span className="ui-status-badge ui-status-info">{ORDER_STATUS_LABELS[order.status] || `حالة غير معروفة (${order.status || '-'})`}</span>
+                <span className="ui-status-badge ui-status-neutral">حالة دفع الطلب: {order.payment_status || 'غير متاحة'}</span>
               </div>
             </div>
-          </div>
+          </section>
 
-          {/* الكارت الأيسر: الأمان المالي والتحصيل والطباعة */}
-          <div className="space-y-4">
-            <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
-              <h3 className="font-black text-slate-800 text-sm border-b pb-2">الوضعية المالية والتحصيل</h3>
-              
-              <div className="flex justify-between text-xs font-bold text-slate-500">
-                <span>إجمالي قيمة الفحص:</span>
-                <span className="font-mono text-slate-800">{order.total_amount} ج.م</span>
+          <section className="ui-surface-card rounded-2xl p-5">
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h3 className="font-black text-[var(--text-primary)]">جاهزية نتائج الطلب</h3>
+                <p className="mt-1 text-xs font-bold text-[var(--text-muted)]">الجاهزية هنا تعني أن حالة النتيجة منشورة أو مسلّمة فقط، ولا تعني أن عملية التسليم قد نُفذت.</p>
               </div>
-
-              {remainingAmount > 0 ? (
-                // حظر مالي مع نافذة الدفع الفوري للستاف
-                <div className="bg-red-50 border border-red-100 p-4 rounded-2xl space-y-3">
-                  <p className="text-[11px] font-black text-red-700">
-                    ⚠️ المريض متبقٍ عليه مبلِغ مالي مطلوب تحصيله:
-                  </p>
-                  <div className="text-xl font-black font-mono text-red-600 bg-white p-2 rounded-xl border border-red-200 text-center">
-                    {remainingAmount} ج.م
-                  </div>
-                  
-                  <div className="space-y-2 pt-1">
-                    <input 
-                      type="number" 
-                      placeholder="اكتب القيمة المحصلة الآن..."
-                      value={collectAmount}
-                      onChange={(e) => setCollectAmount(e.target.value)}
-                      className="w-full p-2.5 border rounded-xl text-xs font-mono font-black text-left outline-none focus:border-red-500 bg-white"
-                    />
-                    <button
-                      type="button"
-                      disabled={submittingPayment}
-                      onClick={handleQuickPayment}
-                      className="w-full bg-red-600 hover:bg-red-700 text-white py-2.5 rounded-xl text-xs font-black transition-all shadow-sm"
-                    >
-                      {submittingPayment ? 'جاري تحديث الحسابات...' : 'إقرار السداد المالي الفوري 💵'}
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div className="bg-emerald-50 border border-emerald-100 text-emerald-700 p-3 rounded-2xl text-xs font-black text-center flex items-center justify-center gap-1">
-                  <span className="material-symbols-outlined text-sm">check_circle</span> الحساب مصفى ومسدد بالكامل
-                </div>
-              )}
-
-              {/* زر إطلاق الطباعة الشرطي */}
-              <button
-                type="button"
-                disabled={!isApprovedByDoctor || remainingAmount > 0}
-                onClick={() => window.open(`/report/${order.id}`, '_blank')}
-                className={`w-full py-4 rounded-xl text-xs font-black flex items-center justify-center gap-2 shadow-md transition-all ${
-                  !isApprovedByDoctor 
-                    ? 'bg-slate-100 text-slate-400 cursor-not-allowed shadow-none'
-                    : remainingAmount > 0
-                      ? 'bg-red-100 text-red-400 cursor-not-allowed shadow-none border border-red-200'
-                      : 'bg-primary text-white hover:bg-slate-800'
-                }`}
-              >
-                <span className="material-symbols-outlined text-sm">print</span>
-                {!isApprovedByDoctor 
-                  ? 'النتائج لم تُكتب من الطبيب بعد' 
-                  : remainingAmount > 0 
-                    ? 'ممنوع الطباعة (يوجد متبقي مالي)' 
-                    : 'طباعة وتسليم التقرير النهائي'}
-              </button>
+              <span className="ui-status-badge ui-status-info">قابل للطباعة: {readyItems.length} من {reportItems.length}</span>
             </div>
-          </div>
 
+            {order.items?.length ? (
+              <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+                {order.items.map((item) => {
+                  const resultId = item.result?.id;
+                  const result = resultId ? resultDetails[resultId] || item.result : null;
+                  const status = result?.status;
+                  const detailError = resultId ? resultErrors[resultId] : '';
+                  const printable = REPORT_READY_STATUSES.has(status);
+
+                  return (
+                    <article key={item.id} className="rounded-2xl border border-[var(--border-default)] p-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="truncate font-black text-[var(--text-primary)]">{item.test?.name || 'فحص غير معروف'}</p>
+                          <p className="mt-1 font-mono text-[11px] text-[var(--text-muted)]">{item.test?.code || '-'}</p>
+                        </div>
+                        <span className={`ui-status-badge shrink-0 ${RESULT_STATUS_CLASSES[status] || 'ui-status-neutral'}`}>
+                          {result ? RESULT_STATUS_LABELS[status] || `حالة غير معروفة (${status})` : 'لا توجد نتيجة'}
+                        </span>
+                      </div>
+
+                      {detailError && (
+                        <div className="ui-status-danger mt-3 rounded-xl border p-3 text-xs font-bold">
+                          {detailError} تعرض البطاقة الحالة المختصرة من الطلب فقط.
+                        </div>
+                      )}
+
+                      <dl className="mt-4 grid grid-cols-1 gap-2 text-xs font-bold text-[var(--text-secondary)] sm:grid-cols-2">
+                        <div><dt className="text-[var(--text-muted)]">تاريخ النشر</dt><dd className="mt-1">{formatDate(result?.published_at)}</dd></div>
+                        <div><dt className="text-[var(--text-muted)]">سداد التقرير</dt><dd className="mt-1">{item.report_payment_status || 'غير متاح'}</dd></div>
+                      </dl>
+
+                      <p className={`mt-4 rounded-xl border p-3 text-xs font-bold ${printable ? 'ui-status-success' : 'ui-status-warning'}`}>
+                        {printable ? 'يمكن أن تظهر هذه النتيجة في التقرير الحالي القابل للطباعة.' : 'لن تظهر هذه النتيجة في التقرير القابل للطباعة بحالتها الحالية.'}
+                      </p>
+                    </article>
+                  );
+                })}
+              </div>
+            ) : (
+              <AsyncState state="empty" title="لا توجد فحوصات" message="لم يُرجع الخادم فحوصات داخل هذا الطلب." />
+            )}
+          </section>
+
+          <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            <div className="ui-surface-card rounded-2xl p-4">
+              <p className="text-xs font-bold text-[var(--text-muted)]">إجمالي الطلب كما أعاده الخادم</p>
+              <p className="mt-2 text-xl font-black text-[var(--text-primary)]">{order.total ?? '-'}</p>
+              <p className="mt-2 text-[11px] font-bold text-[var(--text-muted)]">لا يُستخدم هذا الحقل لاتخاذ قرار وصول أو تسليم في الواجهة.</p>
+            </div>
+            <div className="ui-status-warning rounded-2xl border p-4 md:col-span-2">
+              <p className="text-sm font-black">التسليم والمشاركة غير متاحين</p>
+              <p className="mt-1 text-xs font-bold leading-6">
+                لا توجد عقود خادم معتمدة لوضع علامة “تم التسليم”، أو إنشاء/إلغاء رابط مشاركة، أو إرسال بريد، أو تجاوز سياسة الدفع. هذه العمليات لن تُحاكى محلياً.
+              </p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <button type="button" disabled className="btn-secondary px-3 py-2 text-xs">تسجيل التسليم</button>
+                <button type="button" disabled className="btn-secondary px-3 py-2 text-xs">إنشاء رابط مشاركة</button>
+                <button type="button" disabled className="btn-secondary px-3 py-2 text-xs">إرسال التقرير</button>
+              </div>
+            </div>
+          </section>
+
+          <button type="button" onClick={openReport} disabled={!canOpenReport} className="btn-primary px-6 py-3">
+            فتح التقرير القابل للطباعة
+          </button>
         </div>
       )}
     </div>

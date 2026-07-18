@@ -1,217 +1,304 @@
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { useLab } from '../context/LabContext';
 import API from '../services/api';
+import PageHeader from '../components/PageHeader';
+import LoadingSpinner, { AsyncState } from '../components/LoadingSpinner';
+
+const ORDERS_PER_PAGE = 20;
+
+const SPECIMEN_LABELS = {
+  blood: 'دم كامل',
+  serum: 'مصل',
+  plasma: 'بلازما',
+  urine: 'بول',
+  stool: 'براز',
+  swab: 'مسحة',
+};
+
+const PAYMENT_STATUS_LABELS = { unpaid: 'غير مدفوع', partial: 'مدفوع جزئياً', paid: 'مدفوع' };
+const PRIORITY_LABELS = { routine: 'روتيني', urgent: 'عاجل', stat: 'فوري' };
+
+const isCancelledRequest = (error) =>
+  error?.code === 'ERR_CANCELED' || error?.name === 'CanceledError';
+
+const getErrorMessage = (error, fallback) =>
+  error.response?.data?.message || error.message || fallback;
+
+const formatMoney = (value) => new Intl.NumberFormat('ar-EG', {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+}).format(Number(value) || 0);
+
+const formatDateTime = (value) => {
+  if (!value) return '—';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return new Intl.DateTimeFormat('ar-EG', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(date);
+};
+
+const getRequiredSpecimens = (order) => {
+  const specimens = new Map();
+  (order.items || []).forEach((item) => {
+    const type = item?.test?.specimen_type;
+    if (!type) return;
+    if (!specimens.has(type)) specimens.set(type, { type, tests: [] });
+    specimens.get(type).tests.push({
+      id: item.id,
+      name: item.test?.name || 'فحص بدون اسم',
+      code: item.test?.code || '',
+    });
+  });
+  return [...specimens.values()];
+};
+
+const normalizeMeta = (meta) => {
+  if (
+    !meta
+    || !Number.isFinite(Number(meta.current_page))
+    || !Number.isFinite(Number(meta.last_page))
+    || !Number.isFinite(Number(meta.total))
+  ) {
+    throw new Error('بيانات ترقيم الصفحات غير متوافقة مع العقد الحالي.');
+  }
+  return {
+    current_page: Math.max(1, Number(meta.current_page)),
+    last_page: Math.max(1, Number(meta.last_page)),
+    total: Math.max(0, Number(meta.total)),
+  };
+};
 
 const SpecimenTracking = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { hasPermission } = useLab();
+  const canCollectSamples = hasPermission('samples.collect');
+
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [submittingId, setSubmittingId] = useState(null);
-  const [activeBarcodeUrl, setActiveBarcodeUrl] = useState(null);
-  const [isBarcodeModalOpen, setIsBarcodeModalOpen] = useState(false);
+  const [error, setError] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pagination, setPagination] = useState({ current_page: 1, last_page: 1, total: 0 });
+  const requestRef = useRef(null);
 
-  const fetchOrdersWithSamples = async () => {
+  const createdOrderId = Number(location.state?.createdOrderId || 0);
+  const createdOrderNumber = typeof location.state?.createdOrderNumber === 'string'
+    ? location.state.createdOrderNumber
+    : '';
+  const workflowSource = location.state?.workflowSource === 'create-order';
+
+  const fetchPendingOrders = useCallback(async () => {
+    requestRef.current?.abort();
+    const controller = new AbortController();
+    requestRef.current = controller;
     setLoading(true);
+    setError('');
     try {
-      const response = await API.get('/orders?per_page=30');
-      setOrders(response.data?.data || []);
-    } catch (err) {
-      console.error("خطأ في جلب العينات من السيرفر المركزي:", err);
+      const response = await API.get('/orders', {
+        params: { status: 'pending', per_page: ORDERS_PER_PAGE, page: currentPage },
+        signal: controller.signal,
+      });
+      if (!Array.isArray(response.data?.data)) {
+        throw new Error('استجابة طابور الطلبات المعلقة غير متوافقة مع العقد الحالي.');
+      }
+      setOrders(response.data.data);
+      setPagination(normalizeMeta(response.data.meta));
+    } catch (requestError) {
+      if (!isCancelledRequest(requestError)) {
+        setOrders([]);
+        setPagination({ current_page: 1, last_page: 1, total: 0 });
+        setError(getErrorMessage(requestError, 'تعذر تحميل الطلبات التي تنتظر سحب العينات.'));
+      }
     } finally {
-      setLoading(false);
+      if (!controller.signal.aborted) setLoading(false);
     }
-  };
+  }, [currentPage]);
 
   useEffect(() => {
-    fetchOrdersWithSamples();
-  }, []);
+    fetchPendingOrders();
+    return () => requestRef.current?.abort();
+  }, [fetchPendingOrders]);
 
-  const handleCollectSample = async (orderId, specimenType) => {
-    setSubmittingId(`collect-${orderId}-${specimenType}`);
-    try {
-      await API.post(`/orders/${orderId}/samples`, {
-        specimen_type: specimenType 
-      });
-      alert(`✅ تم إقرار سحب عينة (${specimenType === 'blood' ? 'دم EDTA' : 'بول Urine'}) وتوليد الباركود بنجاح.`);
-      await fetchOrdersWithSamples(); // إعادة الجلب لتحديث الحالات فوراً
-    } catch (err) {
-      alert("فشل في تسجيل سحب العينة: " + (err.response?.data?.message || err.message));
-    } finally {
-      setSubmittingId(null);
-    }
-  };
+  const filteredOrders = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) return orders;
+    return orders.filter((order) => [
+      order.order_number,
+      order.id?.toString(),
+      order.patient?.full_name,
+      order.patient?.patient_code,
+      order.patient?.phone,
+    ]
+      .filter(Boolean)
+      .some((value) => value.toString().toLowerCase().includes(query)));
+  }, [orders, searchQuery]);
 
-  const handleReceiveSample = async (sampleId) => {
-    setSubmittingId(`receive-${sampleId}`);
-    try {
-      await API.post(`/samples/${sampleId}/receive`);
-      alert("✓ تم استلام العينة داخل المعمل وتحويلها لقسم التحليل الفني.");
-      await fetchOrdersWithSamples(); // إعادة جلب فوري لأسقاط الكارت من واجهة السحب حياً
-    } catch (err) {
-      alert("فشل استلام العينة: " + (err.response?.data?.message || err.message));
-    } finally {
-      setSubmittingId(null);
-    }
-  };
-
-  const handlePrintBarcode = async (sampleId) => {
-    try {
-      const barcodeEndpoint = `${API.defaults.baseURL}/barcodes/samples/${sampleId}`;
-      setActiveBarcodeUrl(barcodeEndpoint);
-      setIsBarcodeModalOpen(true);
-    } catch (err) {
-      alert("تعذر جلب ملصق الباركود من السيرفر");
-    }
-  };
-
-  // 🎯 الفلترة الذكية: إظهار الطلبات التي تحتوي على عينات لم يتم استلامها بالكامل داخل المعمل بعد
-  const pendingOrders = orders.filter(order => {
-    // تحديد الأنابيب المطلوبة بناءً على أنواع التحاليل المكتوبة بالطلب
-    const hasBlood = order.items?.some(i => i.test_name?.toLowerCase().includes('دم') || i.test_name?.toLowerCase().includes('cbc'));
-    const hasUrine = order.items?.some(i => i.test_name?.toLowerCase().includes('بول') || i.test_name?.toLowerCase().includes('urine'));
-    
-    const requiredSpecimens = [];
-    if (hasBlood || order.items?.length > 0) requiredSpecimens.push('blood');
-    if (hasUrine) requiredSpecimens.push('urine');
-
-    // لو الطلب لسه ملوش أي عينات مسحوبة، يفضل ظاهر
-    if (!order.samples || order.samples.length === 0) return true;
-
-    // لو عدد العينات المستلمة أقل من العينات المطلوبة، يفضل ظاهر
-    const receivedCount = order.samples.filter(s => s.status === 'received' || s.status === 'in_progress').length;
-    return receivedCount < requiredSpecimens.length;
-  });
+  const createdOrderVisible = createdOrderId > 0
+    && orders.some((order) => Number(order.id) === createdOrderId);
 
   return (
-    <div className="flex-1 overflow-y-auto p-8 bg-slate-50 text-right font-sans" dir="rtl">
-      <header className="mb-8">
-        <h1 className="text-2xl font-black text-primary flex items-center gap-2">
-          <span className="material-symbols-outlined text-3xl">colorize</span> غرفة سحب وتتبع العينات المخبرية
-        </h1>
-        <p className="text-xs text-slate-400 font-bold mt-1">إدارة دورة حياة العينة (Collected 👈 Received) وطباعة ملصقات الباركود السحابية الحية</p>
-      </header>
+    <main className="flex-1 p-4 md:p-8 text-right" dir="rtl">
+      <PageHeader
+        title="طابور الطلبات بانتظار سحب العينات"
+        description="طلبات pending ومتطلبات العينات المأخوذة حصراً من الفحوصات التي أعادها الخادم"
+        icon="colorize"
+      >
+        <button type="button" className="btn-secondary w-full md:w-auto" onClick={fetchPendingOrders} disabled={loading}>
+          <span className="material-symbols-outlined text-lg" aria-hidden="true">refresh</span>
+          تحديث الطابور
+        </button>
+      </PageHeader>
+
+      {workflowSource && createdOrderId > 0 && (
+        <section className="lims-card mb-5" aria-label="تقدم مسار إنشاء الطلب">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            {[
+              ['المريض', 'تم اختياره والتحقق منه', 'check_circle', 'success'],
+              ['الطلب', createdOrderNumber || `#${createdOrderId}`, 'check_circle', 'success'],
+              ['العينة', 'بانتظار السحب أو الاستلام', 'pending_actions', 'pending'],
+            ].map(([title, description, icon, tone], index) => (
+              <div key={title} className={`ui-status-${tone} rounded-2xl border p-4`}>
+                <div className="flex items-start gap-3">
+                  <span className="material-symbols-outlined" aria-hidden="true">{icon}</span>
+                  <div>
+                    <p className="text-[10px] font-bold opacity-75">المرحلة {index + 1}</p>
+                    <h2 className="font-black">{title}</h2>
+                    <p className="mt-1 text-xs font-bold">{description}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <p className="mt-4 text-xs font-bold text-[var(--text-secondary)]">
+            بيانات التنقل سياق اختياري فقط. حقيقة وجود الطلب وحالته تأتي من طابور الخادم أدناه.
+          </p>
+        </section>
+      )}
+
+      {createdOrderId > 0 && !loading && !error && (
+        <div className={`mb-5 rounded-2xl border p-4 text-sm font-bold ${createdOrderVisible ? 'ui-status-success' : 'ui-status-warning'}`} role="status">
+          {createdOrderVisible
+            ? `تم العثور على الطلب ${createdOrderNumber || `#${createdOrderId}`} في الصفحة الحالية وتم تمييزه.`
+            : `الطلب ${createdOrderNumber || `#${createdOrderId}`} غير ظاهر في الصفحة الحالية. قد يكون في صفحة أخرى أو تغيّرت حالته على الخادم.`}
+        </div>
+      )}
+
+      <div className="ui-status-warning mb-5 rounded-2xl border p-4 text-xs font-bold leading-6 md:text-sm">
+        عرض متطلبات العينات متاح، لكن إنشاء العينات واستلامها ورفضها وتخزينها ما زال غير مفعّل. الخلفية لا توفر حتى الآن طابور عينات محفوظاً يعيد المعرّفات والانتقالات المسموح بها بأمان بعد التحديث.
+      </div>
+
+      <section className="lims-card mb-5">
+        <label className="ui-form-field">
+          <span className="ui-field-label">بحث داخل الصفحة الحالية</span>
+          <span className="relative block">
+            <span className="material-symbols-outlined pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" aria-hidden="true">search</span>
+            <input
+              type="search"
+              placeholder="رقم الطلب، اسم المريض، الكود، أو الهاتف"
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              className="lims-input pr-10"
+            />
+          </span>
+          <span className="ui-field-help">البحث محلي في الصفحة المعروضة فقط لأن API الطلبات لا يدعم بحثاً نصياً عاماً.</span>
+        </label>
+      </section>
 
       {loading ? (
-        <div className="text-center py-20 font-bold text-slate-400">جاري مسح وسحب طلبات العينات الحية...</div>
+        <div className="lims-card"><LoadingSpinner message="جاري تحميل الطلبات المعلقة من الخادم..." /></div>
+      ) : error ? (
+        <AsyncState state="error" title="تعذر تحميل طابور العينات" message={error} action={<button type="button" onClick={fetchPendingOrders} className="btn-secondary">إعادة المحاولة</button>} />
+      ) : filteredOrders.length === 0 ? (
+        <AsyncState
+          state="empty"
+          icon="science"
+          title={searchQuery.trim() ? 'لا توجد نتائج في الصفحة الحالية' : 'لا توجد طلبات pending'}
+          message={searchQuery.trim() ? 'امسح البحث أو انتقل إلى صفحة أخرى.' : 'لا توجد طلبات تنتظر سحب العينات حالياً.'}
+        />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {pendingOrders.map(order => {
-            const hasBlood = order.items?.some(i => i.test_name?.toLowerCase().includes('دم') || i.test_name?.toLowerCase().includes('cbc'));
-            const hasUrine = order.items?.some(i => i.test_name?.toLowerCase().includes('بول') || i.test_name?.toLowerCase().includes('urine'));
-            
-            const requiredSpecimens = [];
-            if (hasBlood || order.items?.length > 0) requiredSpecimens.push('blood');
-            if (hasUrine) requiredSpecimens.push('urine');
-
+        <div className="grid grid-cols-1 gap-5 lg:grid-cols-2 2xl:grid-cols-3">
+          {filteredOrders.map((order) => {
+            const specimenGroups = getRequiredSpecimens(order);
+            const isNewOrder = createdOrderId > 0 && Number(order.id) === createdOrderId;
             return (
-              <div key={order.id} className="bg-white border border-slate-200 rounded-[2rem] p-6 shadow-sm flex flex-col justify-between space-y-4 hover:shadow-md transition-shadow animate-in fade-in duration-300">
-                <div className="flex justify-between items-start border-b pb-3">
-                  <div>
-                    <span className="text-xs font-black font-mono text-primary">ORD-#{order.id}</span>
-                    <h3 className="font-bold text-slate-800 text-sm mt-1">👤 {order.patient?.full_name || `${order.patient?.first_name} ${order.patient?.last_name}`}</h3>
+              <article key={order.id} className={`lims-card flex min-w-0 flex-col ${isNewOrder ? 'ring-4 ring-[var(--focus-ring)]' : ''}`}>
+                <div className="flex flex-wrap items-start justify-between gap-3 border-b border-[var(--border-default)] pb-4">
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap gap-2">
+                      <span className="ui-status-badge ui-status-info font-mono">{order.order_number || `#${order.id}`}</span>
+                      {isNewOrder && <span className="ui-status-badge ui-status-success">تم إنشاؤه الآن</span>}
+                    </div>
+                    <h2 className="mt-3 truncate text-sm font-black text-[var(--text-primary)]">{order.patient?.full_name || 'مريض غير مسجل'}</h2>
+                    <p className="mt-1 truncate font-mono text-[10px] font-bold text-[var(--text-muted)]">{order.patient?.patient_code || order.patient?.phone || 'لا يوجد كود متاح'}</p>
+                    <p className="mt-1 text-[10px] font-bold text-[var(--text-muted)]">{formatDateTime(order.ordered_at)}</p>
                   </div>
-                  <span className={`text-[9px] font-black px-2 py-0.5 rounded ${order.priority === 'urgent' ? 'bg-red-100 text-red-600 animate-pulse' : 'bg-slate-100 text-slate-500'}`}>
-                    {order.priority?.toUpperCase()}
+                  <span className={`ui-status-badge ${order.priority === 'stat' ? 'ui-status-danger' : order.priority === 'urgent' ? 'ui-status-warning' : 'ui-status-neutral'}`}>
+                    {PRIORITY_LABELS[order.priority] || order.priority || 'غير محدد'}
                   </span>
                 </div>
 
-                <div className="flex flex-wrap gap-1">
-                  {order.items?.map(item => (
-                    <span key={item.id} className="text-[10px] font-bold bg-slate-50 text-slate-500 px-2.5 py-1 rounded-lg border border-slate-100">
-                      🔬 {item.test_name}
-                    </span>
-                  ))}
-                </div>
-
-                <div className="pt-2 border-t space-y-2">
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-2">حالة الأنابيب والمسحات:</p>
-                  
-                  {(!order.samples || order.samples.length === 0) ? (
-                    requiredSpecimens.map(specimen => (
-                      <button
-                        key={specimen}
-                        onClick={() => handleCollectSample(order.id, specimen)}
-                        disabled={submittingId === `collect-${order.id}-${specimen}`}
-                        className="w-full bg-amber-500 hover:bg-amber-600 text-white py-2.5 rounded-xl text-xs font-black shadow-md flex items-center justify-center gap-1 transition-all disabled:opacity-50"
-                      >
-                        <span className="material-symbols-outlined text-sm">colorize</span>
-                        {submittingId === `collect-${order.id}-${specimen}` ? 'جاري سحب الأنبوبة وتوليد الباركود...' : `سحب عينة ${specimen === 'blood' ? 'دم (EDTA)' : 'بول (Urine)'}`}
-                      </button>
-                    ))
+                <div className="mt-4 flex-1">
+                  <h3 className="mb-3 text-xs font-black text-[var(--text-primary)]">متطلبات العينات</h3>
+                  {specimenGroups.length === 0 ? (
+                    <div className="ui-status-danger rounded-2xl border p-4 text-xs font-bold">
+                      لا يحتوي رد الخادم على نوع عينة صالح لأي فحص. لن يتم تخمين نوع عينة.
+                    </div>
                   ) : (
-                    order.samples.map(sample => {
-                      const isReceived = sample.status === 'received' || sample.status === 'in_progress';
-                      return (
-                        <div key={sample.id} className="flex flex-col gap-2 p-3 bg-slate-50 rounded-xl border border-slate-100">
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <p className="text-xs font-black text-slate-700 uppercase font-mono">🧪 عينة {sample.specimen_type === 'blood' ? 'دم (EDTA)' : 'بول (Urine)'}</p>
-                              <p className="text-[9px] text-slate-400 font-mono mt-0.5">BARCODE: {sample.barcode || `SMP-${sample.id}`}</p>
+                    <div className="space-y-3">
+                      {specimenGroups.map((group) => (
+                        <section key={group.type} className="ui-surface-muted rounded-2xl border border-[var(--border-default)] p-4">
+                          <div className="flex flex-wrap items-start justify-between gap-3">
+                            <div className="min-w-0">
+                              <h4 className="font-black text-[var(--text-primary)]">{SPECIMEN_LABELS[group.type] || `نوع غير معروف: ${group.type}`}</h4>
+                              <ul className="mt-2 space-y-1 text-xs font-bold text-[var(--text-secondary)]">
+                                {group.tests.map((test) => (
+                                  <li key={test.id} className="flex gap-2"><span aria-hidden="true">•</span><span className="min-w-0 break-words">{test.name}{test.code ? ` (${test.code})` : ''}</span></li>
+                                ))}
+                              </ul>
                             </div>
-
-                            {isReceived ? (
-                              <span className="bg-emerald-100 text-emerald-700 text-[10px] font-black px-2.5 py-1 rounded-lg border border-emerald-200 flex items-center gap-1">
-                                <span className="material-symbols-outlined text-xs">check_circle</span> داخل المعمل
-                              </span>
-                            ) : (
-                              <button
-                                type="button"
-                                onClick={() => handleReceiveSample(sample.id)}
-                                disabled={submittingId === `receive-${sample.id}`}
-                                className="bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] font-black px-3 py-1.5 rounded-lg shadow-sm transition-all disabled:opacity-50 flex items-center gap-0.5"
-                              >
-                                <span className="material-symbols-outlined text-xs">input</span>
-                                {submittingId === `receive-${sample.id}` ? 'جاري الاستلام...' : 'إقرار استلام المعمل'}
+                            {canCollectSamples ? (
+                              <button type="button" disabled className="btn-secondary shrink-0 cursor-not-allowed" title="متوقف حتى اكتمال عقد الخلفية الخاص بدورة حياة العينات">
+                                السحب غير متاح
                               </button>
+                            ) : (
+                              <span className="ui-status-badge ui-status-neutral shrink-0">عرض فقط</span>
                             )}
                           </div>
-
-                          <button
-                            type="button"
-                            onClick={() => handlePrintBarcode(sample.id)}
-                            className="w-full py-1.5 mt-1 bg-white border border-slate-200 hover:border-primary text-slate-700 hover:text-primary rounded-lg text-[10px] font-bold flex items-center justify-center gap-1 transition-all shadow-sm"
-                          >
-                            <span className="material-symbols-outlined text-xs">print</span>
-                            استعراض ملصق باركود المريض المعتمد
-                          </button>
-                        </div>
-                      );
-                    })
+                        </section>
+                      ))}
+                    </div>
                   )}
                 </div>
-              </div>
+
+                <footer className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-[var(--border-default)] pt-4 text-xs font-bold text-[var(--text-secondary)]">
+                  <span>الدفع: {PAYMENT_STATUS_LABELS[order.payment_status] || order.payment_status || 'غير معروف'}</span>
+                  <span className="font-mono font-black text-[var(--text-primary)]">الإجمالي: {formatMoney(order.total)}</span>
+                </footer>
+              </article>
             );
           })}
-          {pendingOrders.length === 0 && (
-            <div className="col-span-full text-center py-20 bg-white border rounded-[2rem] text-slate-300 font-black text-sm">
-              🎉 ممتاز! طابور السحب فارغ تماماً، تم سحب واستلام جميع عينات الحالات اليومية.
-            </div>
-          )}
         </div>
       )}
 
-      {/* نافذة منبثقة (Modal) لمعاينة وطباعة استيكر الباركود المستلم حياً من السيرفر */}
-      {isBarcodeModalOpen && activeBarcodeUrl && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-3xl p-6 w-full max-w-xs shadow-2xl text-center border animate-in zoom-in duration-200">
-            <h3 className="font-black text-sm text-slate-800 border-b pb-2 mb-4">ملصق باركود العينة الحراري</h3>
-            <div className="bg-slate-50 p-4 rounded-xl border border-dashed border-slate-300 inline-block w-full">
-              <img 
-                src={activeBarcodeUrl} 
-                alt="Sample Barcode Label" 
-                className="mx-auto max-h-24 mix-blend-multiply"
-                onError={(e) => {
-                  e.target.src = "https://upload.wikimedia.org/wikipedia/commons/thumb/8/84/Ean-13-isbn-example.svg/400px-Ean-13-isbn-example.svg.png";
-                }}
-              />
-            </div>
-            <p className="text-[10px] text-slate-400 font-bold mt-2">الملصق يحتوي كود التتبع الفريد المشفر ببيانات المريض</p>
-            <div className="flex gap-2 mt-5">
-              <button onClick={() => setIsBarcodeModalOpen(false)} className="flex-1 py-2 border rounded-xl text-xs font-bold bg-slate-50">إلغاء</button>
-              <button onClick={() => window.print()} className="flex-[2] bg-primary text-white py-2 rounded-xl text-xs font-black shadow-md shadow-primary/10">طباعة فورية 🖨️</button>
-            </div>
-          </div>
-        </div>
+      {!loading && !error && pagination.total > 0 && (
+        <nav className="ui-surface-card mt-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[var(--border-default)] p-3" aria-label="صفحات طابور العينات">
+          <button type="button" className="btn-secondary" onClick={() => setCurrentPage((page) => Math.max(1, page - 1))} disabled={pagination.current_page <= 1}>السابق</button>
+          <span className="text-center text-xs font-bold text-[var(--text-secondary)]">الصفحة {pagination.current_page} من {pagination.last_page} · إجمالي pending: {pagination.total}</span>
+          <button type="button" className="btn-secondary" onClick={() => setCurrentPage((page) => Math.min(pagination.last_page, page + 1))} disabled={pagination.current_page >= pagination.last_page}>التالي</button>
+        </nav>
       )}
-    </div>
+
+      <div className="mt-6 text-center">
+        <button type="button" className="btn-ghost" onClick={() => navigate('/appointments-queue')}>فتح طابور الطلبات الكامل</button>
+      </div>
+    </main>
   );
 };
 

@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect, useId, useRef } from 'react';
 import { createPortal } from 'react-dom';
 
 // ============================================================================
@@ -92,22 +92,79 @@ const ConfirmDialog = ({
   onCancel,
   closeDialog,
 }) => {
+  const dialogRef = useRef(null);
+  const cancelButtonRef = useRef(null);
+  const previousFocusRef = useRef(null);
+  const titleId = useId();
+  const descriptionId = useId();
+
+  useEffect(() => {
+    if (!isOpen) return undefined;
+
+    previousFocusRef.current = document.activeElement;
+    const focusTimer = window.setTimeout(() => {
+      cancelButtonRef.current?.focus();
+    }, 0);
+
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        closeDialog();
+        return;
+      }
+
+      if (event.key !== 'Tab') return;
+
+      const dialog = dialogRef.current;
+      if (!dialog) return;
+
+      const focusableElements = Array.from(
+        dialog.querySelectorAll(
+          'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        )
+      );
+
+      if (focusableElements.length === 0) {
+        event.preventDefault();
+        dialog.focus();
+        return;
+      }
+
+      const firstElement = focusableElements[0];
+      const lastElement = focusableElements[focusableElements.length - 1];
+
+      if (event.shiftKey && document.activeElement === firstElement) {
+        event.preventDefault();
+        lastElement.focus();
+      } else if (!event.shiftKey && document.activeElement === lastElement) {
+        event.preventDefault();
+        firstElement.focus();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      window.clearTimeout(focusTimer);
+      document.removeEventListener('keydown', handleKeyDown);
+      previousFocusRef.current?.focus?.();
+    };
+  }, [isOpen, closeDialog]);
+
   if (!isOpen) return null;
 
-  // أيقونة حسب النوع
   const getIcon = () => {
     switch (type) {
       case 'danger':
-        return { icon: 'warning', color: 'text-red-500', bg: 'bg-red-50 dark:bg-red-950/30' };
+        return { icon: 'warning', tone: 'ui-confirm-danger' };
       case 'warning':
-        return { icon: 'help', color: 'text-amber-500', bg: 'bg-amber-50 dark:bg-amber-950/30' };
+        return { icon: 'help', tone: 'ui-confirm-warning' };
       case 'info':
       default:
-        return { icon: 'info', color: 'text-blue-500', bg: 'bg-blue-50 dark:bg-blue-950/30' };
+        return { icon: 'info', tone: 'ui-confirm-info' };
     }
   };
 
-  // لون زر التأكيد حسب النوع
   const getConfirmButtonClass = () => {
     switch (type) {
       case 'danger':
@@ -120,119 +177,63 @@ const ConfirmDialog = ({
     }
   };
 
-  const { icon, color, bg } = getIcon();
+  const { icon, tone } = getIcon();
 
-  // منع انتشار النقر للخلفية
-  const handleBackdropClick = (e) => {
-    if (e.target === e.currentTarget) {
+  const handleBackdropClick = (event) => {
+    if (event.target === event.currentTarget) {
       closeDialog();
     }
   };
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[9998] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in"
+      className="ui-confirm-backdrop animate-fade-in"
       onClick={handleBackdropClick}
       dir="rtl"
     >
       <div
-        className="
-          bg-white dark:bg-slate-900
-          w-full max-w-md
-          rounded-3xl
-          shadow-2xl
-          border border-slate-200 dark:border-slate-800
-          animate-zoom-in
-          overflow-hidden
-          mx-4
-        "
+        ref={dialogRef}
+        className="ui-confirm-dialog animate-zoom-in"
         role="dialog"
         aria-modal="true"
-        aria-labelledby="confirm-title"
+        aria-labelledby={titleId}
+        aria-describedby={descriptionId}
+        tabIndex={-1}
       >
-        {/* Header */}
-        <div className="p-6 pb-0">
-          <div className="flex items-center gap-4">
-            {/* Icon */}
-            <div
-              className={`
-                w-12 h-12 md:w-14 md:h-14
-                rounded-2xl
-                flex items-center justify-center
-                shrink-0
-                ${bg} ${color}
-              `}
-            >
-              <span className="material-symbols-outlined text-3xl md:text-4xl">
+        <div className="ui-confirm-header">
+          <div className="flex min-w-0 items-center gap-4">
+            <div className={`ui-confirm-icon ${tone}`} aria-hidden="true">
+              <span className="material-symbols-outlined">
                 {icon}
               </span>
             </div>
 
-            {/* Title */}
-            <h3
-              id="confirm-title"
-              className="
-                text-lg md:text-xl
-                font-black
-                text-slate-900 dark:text-white
-                leading-tight
-              "
-            >
+            <h3 id={titleId} className="ui-confirm-title">
               {title}
             </h3>
           </div>
         </div>
 
-        {/* Body */}
-        <div className="p-6">
-          <p
-            className="
-              text-sm md:text-base
-              font-bold
-              text-slate-600 dark:text-slate-300
-              leading-relaxed
-            "
-          >
+        <div className="ui-confirm-body">
+          <p id={descriptionId} className="ui-confirm-message">
             {message}
           </p>
         </div>
 
-        {/* Footer */}
-        <div className="p-6 pt-0 flex gap-3">
-          {/* زر الإلغاء */}
+        <div className="ui-confirm-footer">
           <button
+            ref={cancelButtonRef}
+            type="button"
             onClick={onCancel}
-            className="
-              flex-1
-              px-4 py-3
-              bg-slate-100 dark:bg-slate-800
-              hover:bg-slate-200 dark:hover:bg-slate-700
-              text-slate-700 dark:text-slate-300
-              font-black
-              rounded-xl
-              text-sm
-              transition-all
-              duration-200
-              active:scale-95
-            "
+            className="btn-secondary ui-confirm-cancel"
           >
             {cancelText}
           </button>
 
-          {/* زر التأكيد */}
           <button
+            type="button"
             onClick={onConfirm}
-            className={`
-              flex-[2]
-              px-4 py-3
-              font-black
-              rounded-xl
-              text-sm
-              transition-all
-              duration-200
-              active:scale-95
-              ${getConfirmButtonClass()}
-            `}
+            className={`${getConfirmButtonClass()} ui-confirm-submit`}
           >
             {confirmText}
           </button>
@@ -247,7 +248,6 @@ const ConfirmDialog = ({
 // 🔔 Hooks و Functions مساعدة
 // ============================================================================
 
-// Hook للاستخدام في أي Component
 export const useConfirmSystem = () => {
   const { showConfirm } = useConfirm();
 
@@ -273,13 +273,11 @@ export const initConfirm = (confirmFn) => {
   globalConfirm = confirmFn;
 };
 
-// دوال عامة للاستخدام في أي مكان
 export const confirm = {
   danger: (title, message, confirmText = 'تأكيد', cancelText = 'إلغاء') => {
     if (globalConfirm) {
       return globalConfirm({ title, message, type: 'danger', confirmText, cancelText });
     }
-    // Fallback
     return Promise.resolve(window.confirm(message));
   },
   warning: (title, message, confirmText = 'تأكيد', cancelText = 'إلغاء') => {

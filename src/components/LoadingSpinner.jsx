@@ -42,23 +42,32 @@ const LoadingSpinner = ({
   const textSize = textSizeMap[size] || textSizeMap.md;
 
   const spinner = (
-    <div className={`flex flex-col items-center justify-center gap-4 ${className}`}>
+    <div
+      className={`ui-loading-spinner flex flex-col items-center justify-center gap-3 md:gap-4 ${className}`}
+      role="status"
+      aria-live="polite"
+      aria-atomic="true"
+      aria-busy="true"
+    >
       <div
         className={`${spinnerSize} ${spinnerColor} animate-spin rounded-full border-current border-t-transparent shadow-sm`}
-        role="status"
-        aria-label="جاري التحميل"
+        aria-hidden="true"
       />
       {message && (
         <p className={`ui-async-state-message ${textSize} animate-pulse-soft`}>
           {message}
         </p>
       )}
+      {!message && <span className="sr-only">جاري التحميل</span>}
     </div>
   );
 
   if (fullScreen) {
     return (
-      <div className="ui-loading-overlay fixed inset-0 z-[9997] flex items-center justify-center backdrop-blur-sm">
+      <div
+        className="ui-loading-overlay fixed inset-0 z-[9997] flex items-center justify-center p-4 backdrop-blur-sm"
+        aria-busy="true"
+      >
         {spinner}
       </div>
     );
@@ -122,6 +131,7 @@ export const AsyncState = ({
       className={`ui-async-state ${config.className} ${compact ? 'ui-async-state-compact' : ''} ${className}`}
       role={role}
       aria-live={liveMode}
+      aria-atomic="true"
     >
       <span className="ui-async-state-icon" aria-hidden="true">
         <span className="material-symbols-outlined">{icon || config.icon}</span>
@@ -143,13 +153,13 @@ export const SkeletonLoader = ({
   className = '',
 }) => {
   return (
-    <div className={`space-y-3 ${className}`}>
+    <div className={`ui-skeleton-group space-y-3 ${className}`} aria-hidden="true">
       {Array.from({ length: rows }).map((_, rowIndex) => (
         <div
           key={rowIndex}
-          className="grid gap-3"
+          className="ui-skeleton-row grid gap-3"
           style={{
-            gridTemplateColumns: `repeat(${columns}, 1fr)`,
+            gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`,
           }}
         >
           {Array.from({ length: columns }).map((_, colIndex) => (
@@ -167,12 +177,12 @@ export const SkeletonLoader = ({
 
 export const CardSkeleton = ({ count = 1 }) => {
   return (
-    <div className="grid-responsive">
+    <div className="grid-responsive" aria-hidden="true">
       {Array.from({ length: count }).map((_, index) => (
         <div key={index} className="lims-card">
           <div className="mb-4 flex items-center gap-4">
-            <div className="ui-skeleton h-12 w-12 rounded-xl" />
-            <div className="flex-1">
+            <div className="ui-skeleton h-12 w-12 shrink-0 rounded-xl" />
+            <div className="min-w-0 flex-1">
               <div className="ui-skeleton h-4 w-3/4 rounded-lg" />
               <div className="ui-skeleton mt-2 h-3 w-1/2 rounded-lg" />
             </div>
@@ -194,8 +204,8 @@ export const CardSkeleton = ({ count = 1 }) => {
 
 export const TableSkeleton = ({ rows = 5, columns = 4 }) => {
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full border-collapse">
+    <div className="overflow-x-auto" aria-hidden="true">
+      <table className="w-full min-w-[36rem] border-collapse">
         <thead>
           <tr className="ui-surface-muted">
             {Array.from({ length: columns }).map((_, index) => (

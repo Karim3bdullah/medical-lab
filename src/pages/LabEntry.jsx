@@ -324,15 +324,26 @@ const LabEntry = () => {
     <div className="ui-surface-page min-h-screen flex-1 p-4 text-right md:p-8" dir="rtl">
       <PageHeader
         title="إدخال ودورة اعتماد النتائج"
-        description="طابور نتائج حقيقي بمراحل المراجعة والاعتماد والنشر دون بيانات طبية افتراضية"
+        description="متابعة النتائج الموجودة ومراحل المراجعة والاعتماد والنشر دون إنشاء بيانات طبية افتراضية"
         icon="biotech"
       />
 
-      <div className="ui-status-warning mb-5 rounded-2xl border px-5 py-4 text-xs font-bold leading-6 md:text-sm">
-        إدخال قيم جديدة متوقف حتى يعيد الخادم تعريفات ومعرّفات باراميترات الفحص الحقيقية ويطبق صلاحية الإدخال بصورة مستقلة. يمكن متابعة النتائج الموجودة فقط.
-      </div>
+      <section className="ui-status-info mb-5 rounded-2xl border p-4 md:p-5" aria-labelledby="result-entry-capability-title">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="flex min-w-0 items-start gap-3">
+            <span className="material-symbols-outlined mt-0.5 shrink-0" aria-hidden="true">fact_check</span>
+            <div>
+              <h2 id="result-entry-capability-title" className="font-black">متابعة النتائج الحالية</h2>
+              <p className="mt-1 text-xs font-bold leading-6 md:text-sm">
+                يمكن متابعة النتائج الموجودة وإجراءاتها الحالية. إدخال نتيجة جديدة يظل معطلاً، ولن يتم إنشاء قيم أو إرسال طلب غير مدعوم.
+              </p>
+            </div>
+          </div>
+          <span className="ui-status-badge ui-status-warning shrink-0">الإدخال الجديد متوقف</span>
+        </div>
+      </section>
 
-      <div className="mb-5 flex flex-wrap gap-2" role="tablist" aria-label="حالة طلبات النتائج">
+      <nav className="mb-5 flex flex-wrap gap-2" role="tablist" aria-label="حالة طلبات النتائج">
         {ORDER_STATUSES.map((status) => (
           <button
             key={status}
@@ -345,32 +356,51 @@ const LabEntry = () => {
             {ORDER_STATUS_LABELS[status]}
           </button>
         ))}
-      </div>
+      </nav>
 
       <div className="grid min-h-0 gap-6 xl:grid-cols-[22rem_minmax(0,1fr)]">
-        <aside className="min-w-0 space-y-4">
-          <div className="ui-surface-card rounded-2xl p-4">
-            <div className="flex flex-wrap items-center justify-between gap-3">
+        <aside className="min-w-0 space-y-4" aria-label="قائمة طلبات النتائج">
+          <section className="ui-surface-card rounded-2xl p-4">
+            <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
                 <p className="text-sm font-black text-[var(--text-primary)]">طلبات {ORDER_STATUS_LABELS[selectedStatus]}</p>
                 <p className="mt-1 text-[11px] font-bold text-[var(--text-muted)]">{meta.total} طلباً بحسب الخادم</p>
               </div>
               <button type="button" onClick={() => fetchOrders()} className="btn-ghost px-3 py-2 text-xs" disabled={loadingOrders}>
-                تحديث
+                <span className={`material-symbols-outlined text-base ${loadingOrders ? 'animate-spin' : ''}`} aria-hidden="true">refresh</span>
+                {loadingOrders ? 'جاري التحديث...' : 'تحديث'}
               </button>
             </div>
-            <label className="ui-form-field mt-4">
-              <span className="ui-field-label">بحث في الصفحة الحالية</span>
-              <input
-                type="search"
-                className="lims-input w-full"
-                value={searchQuery}
-                onChange={(event) => setSearchQuery(event.target.value)}
-                placeholder="رقم الطلب أو اسم المريض"
-              />
-              <span className="ui-field-help">البحث محلي داخل الصفحة المحمّلة فقط.</span>
-            </label>
-          </div>
+
+            <div className="mt-4 flex flex-col gap-3">
+              <label className="ui-form-field">
+                <span className="ui-field-label">بحث في الصفحة الحالية</span>
+                <span className="relative block">
+                  <span className="material-symbols-outlined pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-base text-[var(--text-muted)]" aria-hidden="true">search</span>
+                  <input
+                    type="search"
+                    className="lims-input w-full pr-10"
+                    value={searchQuery}
+                    onChange={(event) => setSearchQuery(event.target.value)}
+                    placeholder="رقم الطلب أو اسم المريض"
+                  />
+                </span>
+                <span className="ui-field-help">البحث محلي داخل الصفحة المحمّلة فقط.</span>
+              </label>
+              {searchQuery && (
+                <button type="button" onClick={() => setSearchQuery('')} className="btn-secondary self-start px-4 py-2 text-xs">
+                  <span className="material-symbols-outlined text-base" aria-hidden="true">close</span>
+                  مسح البحث
+                </button>
+              )}
+            </div>
+
+            {!loadingOrders && !ordersError && (
+              <p className="mt-3 text-[11px] font-bold text-[var(--text-muted)]" role="status" aria-live="polite">
+                عرض {visibleOrders.length} من {orders.length} طلب في الصفحة الحالية.
+              </p>
+            )}
+          </section>
 
           <div className="space-y-3">
             {loadingOrders && orders.length === 0 ? (
@@ -387,7 +417,8 @@ const LabEntry = () => {
               <AsyncState
                 state="empty"
                 title={orders.length ? 'لا توجد مطابقة في الصفحة الحالية' : 'لا توجد طلبات في هذه الحالة'}
-                message={orders.length ? 'جرّب مصطلح بحث آخر أو انتقل إلى صفحة مختلفة.' : 'سيظهر الطلب هنا عندما يعيده الخادم بهذه الحالة.'}
+                message={orders.length ? 'امسح البحث أو جرّب مصطلحاً آخر أو انتقل إلى صفحة مختلفة.' : 'سيظهر الطلب هنا عندما يعيده الخادم بهذه الحالة.'}
+                action={orders.length && searchQuery ? <button type="button" onClick={() => setSearchQuery('')} className="btn-secondary px-4 py-2 text-xs">مسح البحث</button> : null}
                 className="ui-surface-card rounded-2xl p-6"
               />
             ) : (
@@ -396,13 +427,17 @@ const LabEntry = () => {
                   type="button"
                   key={order.id}
                   onClick={() => setActiveOrderId(order.id)}
+                  aria-pressed={Number(activeOrderId) === Number(order.id)}
                   className={`w-full rounded-2xl border p-4 text-right transition-colors ${
                     Number(activeOrderId) === Number(order.id)
-                      ? 'border-[var(--brand-primary)] bg-[color-mix(in_srgb,var(--brand-primary),transparent_92%)]'
+                      ? 'border-[var(--brand-primary)] bg-[color-mix(in_srgb,var(--brand-primary),transparent_92%)] ring-2 ring-[var(--focus-ring)]'
                       : 'ui-surface-interactive'
                   }`}
                 >
-                  <span className="ui-status-badge ui-status-info font-mono">{order.order_number || `#${order.id}`}</span>
+                  <div className="flex flex-wrap items-start justify-between gap-2">
+                    <span className="ui-status-badge ui-status-info font-mono">{order.order_number || `#${order.id}`}</span>
+                    {Number(activeOrderId) === Number(order.id) && <span className="ui-status-badge ui-status-success">محدد</span>}
+                  </div>
                   <span className="mt-3 block truncate text-sm font-black text-[var(--text-primary)]">{order.patient?.full_name || 'مريض غير مسجل'}</span>
                   <span className="mt-1 block text-[11px] font-bold text-[var(--text-muted)]">{order.patient?.patient_code || 'بدون كود مريض'}</span>
                   <span className="mt-3 block text-[11px] font-bold text-[var(--text-secondary)]">{formatDate(order.ordered_at)}</span>
@@ -432,7 +467,7 @@ const LabEntry = () => {
           </div>
         </aside>
 
-        <section className="ui-surface-card min-w-0 rounded-3xl p-4 md:p-6">
+        <section className="ui-surface-card min-w-0 rounded-3xl p-4 md:p-6" aria-label="تفاصيل الطلب والنتيجة">
           {loadingOrder ? (
             <LoadingSpinner message="جاري تحميل تفاصيل الطلب..." className="min-h-72" />
           ) : orderError ? (
@@ -445,7 +480,7 @@ const LabEntry = () => {
             />
           ) : activeOrder ? (
             <div className="space-y-5">
-              <div className="ui-surface-muted rounded-2xl p-4">
+              <header className="ui-surface-muted rounded-2xl p-4">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div>
                     <p className="font-mono text-xs font-black text-[var(--brand-primary)]">{activeOrder.order_number || `#${activeOrder.id}`}</p>
@@ -457,49 +492,82 @@ const LabEntry = () => {
                     <p className="mt-2 text-xs font-bold text-[var(--text-secondary)]">{formatDate(activeOrder.ordered_at)}</p>
                   </div>
                 </div>
-              </div>
+              </header>
 
               <div className="grid min-w-0 gap-5 lg:grid-cols-[16rem_minmax(0,1fr)]">
-                <div className="min-w-0 space-y-2">
-                  <h3 className="text-xs font-black text-[var(--text-secondary)]">فحوصات الطلب</h3>
-                  {(activeOrder.items || []).map((item) => (
-                    <button
-                      type="button"
-                      key={item.id}
-                      onClick={() => setActiveItemId(item.id)}
-                      className={`w-full rounded-xl border p-3 text-right transition-colors ${
-                        Number(activeItemId) === Number(item.id)
-                          ? 'border-[var(--brand-primary)] bg-[color-mix(in_srgb,var(--brand-primary),transparent_92%)]'
-                          : 'ui-surface-interactive'
-                      }`}
-                    >
-                      <p className="truncate text-xs font-black text-[var(--text-primary)]">{item.test?.name || 'فحص بدون اسم'}</p>
-                      <p className="mt-1 font-mono text-[10px] text-[var(--text-muted)]">{item.test?.code || `#${item.id}`}</p>
-                      <span className={`ui-status-badge mt-2 ${RESULT_STATUS_CLASSES[item.result?.status] || 'ui-status-neutral'}`}>
-                        {item.result ? RESULT_STATUS_LABELS[item.result.status] || item.result.status : 'لا توجد نتيجة'}
-                      </span>
-                    </button>
-                  ))}
-                  {(activeOrder.items || []).length === 0 && <p className="py-6 text-center text-xs font-bold text-[var(--text-muted)]">لا توجد بنود فحص في الطلب.</p>}
-                </div>
+                <section className="min-w-0 space-y-3" aria-labelledby="order-tests-title">
+                  <div className="flex items-center justify-between gap-2">
+                    <h3 id="order-tests-title" className="text-xs font-black text-[var(--text-secondary)]">فحوصات الطلب</h3>
+                    <span className="ui-status-badge ui-status-neutral">{(activeOrder.items || []).length}</span>
+                  </div>
 
-                <div className="min-w-0 rounded-2xl border border-[var(--border-default)] p-4 md:p-5">
+                  {(activeOrder.items || []).length > 0 ? (
+                    <div className="space-y-2">
+                      {(activeOrder.items || []).map((item) => (
+                        <button
+                          type="button"
+                          key={item.id}
+                          onClick={() => setActiveItemId(item.id)}
+                          aria-pressed={Number(activeItemId) === Number(item.id)}
+                          className={`w-full rounded-xl border p-3 text-right transition-colors ${
+                            Number(activeItemId) === Number(item.id)
+                              ? 'border-[var(--brand-primary)] bg-[color-mix(in_srgb,var(--brand-primary),transparent_92%)] ring-2 ring-[var(--focus-ring)]'
+                              : 'ui-surface-interactive'
+                          }`}
+                        >
+                          <p className="truncate text-xs font-black text-[var(--text-primary)]">{item.test?.name || 'فحص بدون اسم'}</p>
+                          <p className="mt-1 font-mono text-[10px] text-[var(--text-muted)]">{item.test?.code || `#${item.id}`}</p>
+                          <span className={`ui-status-badge mt-2 ${RESULT_STATUS_CLASSES[item.result?.status] || 'ui-status-neutral'}`}>
+                            {item.result ? RESULT_STATUS_LABELS[item.result.status] || item.result.status : 'لا توجد نتيجة'}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <AsyncState state="empty" title="لا توجد بنود فحص" message="لم يُعد الطلب الحالي أي بنود فحص للعرض." />
+                  )}
+                </section>
+
+                <section className="min-w-0 rounded-2xl border border-[var(--border-default)] p-4 md:p-5" aria-label="حالة الفحص المحدد">
                   {!activeItem ? (
                     <AsyncState state="empty" title="لم يتم اختيار فحص" message="اختر فحصاً لعرض حالة النتيجة." />
                   ) : (
                     <div className="space-y-5">
-                      <div>
-                        <h3 className="text-xl font-black text-[var(--text-primary)]">{activeItem.test?.name || 'فحص بدون اسم'}</h3>
-                        <p className="mt-1 font-mono text-xs text-[var(--text-muted)]">{activeItem.test?.code || `ITEM-${activeItem.id}`}</p>
-                      </div>
+                      <header className="flex flex-col gap-3 border-b border-[var(--border-default)] pb-4 sm:flex-row sm:items-start sm:justify-between">
+                        <div className="min-w-0">
+                          <p className="text-[10px] font-black text-[var(--text-muted)]">الفحص المحدد</p>
+                          <h3 className="mt-1 break-words text-xl font-black text-[var(--text-primary)]">{activeItem.test?.name || 'فحص بدون اسم'}</h3>
+                          <p className="mt-1 font-mono text-xs text-[var(--text-muted)]">{activeItem.test?.code || `ITEM-${activeItem.id}`}</p>
+                        </div>
+                        <span className={`ui-status-badge shrink-0 ${RESULT_STATUS_CLASSES[activeItem.result?.status] || 'ui-status-neutral'}`}>
+                          {activeItem.result ? RESULT_STATUS_LABELS[activeItem.result.status] || activeItem.result.status : 'لا توجد نتيجة'}
+                        </span>
+                      </header>
 
                       {!activeItem.result ? (
-                        <div className="ui-status-warning rounded-xl border p-5 text-sm font-bold leading-6">
-                          لا يمكن إنشاء نموذج إدخال آمن حتى يعيد الخادم باراميترات الفحص ومعرّفاتها الحقيقية. لم يُرسل أي طلب نتائج.
-                        </div>
+                        <section className="ui-status-warning rounded-2xl border p-5" aria-labelledby="new-result-disabled-title">
+                          <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
+                            <div className="flex min-w-0 items-start gap-3">
+                              <span className="material-symbols-outlined mt-0.5 shrink-0" aria-hidden="true">edit_note</span>
+                              <div>
+                                <h4 id="new-result-disabled-title" className="font-black">إدخال نتيجة جديدة غير متاح</h4>
+                                <p className="mt-2 text-xs font-bold leading-6 md:text-sm">
+                                  لا توجد واجهة إدخال مدعومة في الربط الحالي. لن يتم إنشاء قيم أو إرسال طلب أو افتراض بيانات طبية.
+                                </p>
+                              </div>
+                            </div>
+                            <button type="button" className="btn-secondary shrink-0 px-5 py-2.5 text-xs" disabled aria-describedby="new-result-disabled-help">
+                              إدخال نتيجة جديدة
+                            </button>
+                          </div>
+                          <p id="new-result-disabled-help" className="mt-4 border-t border-current/20 pt-4 text-[11px] font-bold leading-5 opacity-80">
+                            يمكنك متابعة بيانات الطلب والفحص فقط حتى تتوفر عملية إدخال مؤكدة ضمن عقد الواجهة.
+                          </p>
+                        </section>
                       ) : !canViewResults ? (
                         <AsyncState
-                          state="empty" icon="lock"
+                          state="empty"
+                          icon="lock"
                           title="تفاصيل النتيجة غير متاحة"
                           message="يمكنك رؤية حالة سير العمل، لكن الحساب لا يملك صلاحية عرض قيم النتيجة."
                         />
@@ -513,17 +581,25 @@ const LabEntry = () => {
                           action={<button type="button" onClick={() => fetchResultDetail(activeItem.result.id)} className="btn-primary px-4 py-2 text-xs">إعادة المحاولة</button>}
                         />
                       ) : (
-                        <>
-                          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                            <div className="ui-surface-muted rounded-xl p-3"><p className="text-[10px] font-bold text-[var(--text-muted)]">الحالة</p><span className={`ui-status-badge mt-2 ${RESULT_STATUS_CLASSES[resultForDisplay?.status] || 'ui-status-neutral'}`}>{RESULT_STATUS_LABELS[resultForDisplay?.status] || resultForDisplay?.status}</span></div>
-                            <div className="ui-surface-muted rounded-xl p-3"><p className="text-[10px] font-bold text-[var(--text-muted)]">الحرج</p><p className="mt-2 text-sm font-black text-[var(--text-primary)]">{resultForDisplay?.is_critical ? 'نعم — نتيجة حرجة' : 'لا'}</p></div>
-                            <div className="ui-surface-muted rounded-xl p-3"><p className="text-[10px] font-bold text-[var(--text-muted)]">وقت الإدخال</p><p className="mt-2 text-xs font-bold text-[var(--text-primary)]">{formatDate(resultForDisplay?.entered_at)}</p></div>
-                            <div className="ui-surface-muted rounded-xl p-3"><p className="text-[10px] font-bold text-[var(--text-muted)]">وقت آخر مرحلة</p><p className="mt-2 text-xs font-bold text-[var(--text-primary)]">{formatDate(resultStageTimestamp(resultForDisplay))}</p></div>
-                          </div>
+                        <div className="space-y-5">
+                          <section aria-labelledby="result-summary-title">
+                            <div className="mb-3 flex items-center justify-between gap-3">
+                              <h4 id="result-summary-title" className="text-sm font-black text-[var(--text-primary)]">ملخص النتيجة</h4>
+                              <span className={`ui-status-badge ${RESULT_STATUS_CLASSES[resultForDisplay?.status] || 'ui-status-neutral'}`}>
+                                {RESULT_STATUS_LABELS[resultForDisplay?.status] || resultForDisplay?.status}
+                              </span>
+                            </div>
+                            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                              <div className="ui-surface-muted rounded-xl p-3"><p className="text-[10px] font-bold text-[var(--text-muted)]">الحالة</p><span className={`ui-status-badge mt-2 ${RESULT_STATUS_CLASSES[resultForDisplay?.status] || 'ui-status-neutral'}`}>{RESULT_STATUS_LABELS[resultForDisplay?.status] || resultForDisplay?.status}</span></div>
+                              <div className="ui-surface-muted rounded-xl p-3"><p className="text-[10px] font-bold text-[var(--text-muted)]">الحرج</p><p className="mt-2 text-sm font-black text-[var(--text-primary)]">{resultForDisplay?.is_critical ? 'نعم — نتيجة حرجة' : 'لا'}</p></div>
+                              <div className="ui-surface-muted rounded-xl p-3"><p className="text-[10px] font-bold text-[var(--text-muted)]">وقت الإدخال</p><p className="mt-2 text-xs font-bold text-[var(--text-primary)]">{formatDate(resultForDisplay?.entered_at)}</p></div>
+                              <div className="ui-surface-muted rounded-xl p-3"><p className="text-[10px] font-bold text-[var(--text-muted)]">وقت آخر مرحلة</p><p className="mt-2 text-xs font-bold text-[var(--text-primary)]">{formatDate(resultStageTimestamp(resultForDisplay))}</p></div>
+                            </div>
+                          </section>
 
                           {(resultForDisplay?.values || []).length ? (
-                            <div className="space-y-3">
-                              <h4 className="text-sm font-black text-[var(--text-primary)]">قيم النتيجة</h4>
+                            <section className="space-y-3" aria-labelledby="result-values-title">
+                              <h4 id="result-values-title" className="text-sm font-black text-[var(--text-primary)]">قيم النتيجة</h4>
                               <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                                 {resultForDisplay.values.map((value, index) => (
                                   <article key={`${value.parameter_code || value.test_parameter_id || index}-${index}`} className={`rounded-xl border p-4 ${value.is_critical ? 'ui-status-danger' : value.is_abnormal ? 'ui-status-warning' : 'ui-surface-muted'}`}>
@@ -539,41 +615,51 @@ const LabEntry = () => {
                                   </article>
                                 ))}
                               </div>
-                            </div>
+                            </section>
                           ) : (
                             <AsyncState state="empty" title="لا توجد قيم مفصلة" message="أعاد الخادم النتيجة دون قائمة قيم تفصيلية." />
                           )}
 
                           {resultForDisplay?.pathologist_comment && (
-                            <div className="ui-status-info rounded-xl border p-4">
-                              <p className="text-xs font-black">تعليق أخصائي علم الأمراض</p>
+                            <section className="ui-status-info rounded-xl border p-4" aria-labelledby="pathologist-comment-title">
+                              <p id="pathologist-comment-title" className="text-xs font-black">تعليق أخصائي علم الأمراض</p>
                               <p className="mt-2 whitespace-pre-wrap text-sm font-bold leading-6">{resultForDisplay.pathologist_comment}</p>
-                            </div>
+                            </section>
                           )}
-                        </>
+                        </div>
                       )}
 
-                      <div className="flex flex-wrap items-center gap-3 border-t border-[var(--border-default)] pt-4">
-                        {availableAction ? (
-                          <button
-                            type="button"
-                            disabled={Boolean(workflowAction)}
-                            onClick={() => runWorkflowAction(availableAction)}
-                            className="btn-primary px-5 py-2.5 text-xs"
-                          >
-                            {actionLabels[availableAction]}
-                          </button>
-                        ) : activeItem.result ? (
-                          <span className="text-xs font-bold text-[var(--text-muted)]">لا يوجد إجراء متاح لهذا الحساب أو لهذه الحالة الحالية.</span>
-                        ) : null}
-                      </div>
+                      <footer className="border-t border-[var(--border-default)] pt-4">
+                        <p className="mb-3 text-[10px] font-black text-[var(--text-muted)]">إجراء سير العمل الحالي</p>
+                        <div className="flex flex-wrap items-center gap-3">
+                          {availableAction ? (
+                            <button
+                              type="button"
+                              disabled={Boolean(workflowAction)}
+                              onClick={() => runWorkflowAction(availableAction)}
+                              className="btn-primary px-5 py-2.5 text-xs"
+                            >
+                              {actionLabels[availableAction]}
+                            </button>
+                          ) : activeItem.result ? (
+                            <span className="text-xs font-bold text-[var(--text-muted)]">لا يوجد إجراء متاح لهذا الحساب أو لهذه الحالة الحالية.</span>
+                          ) : (
+                            <span className="text-xs font-bold text-[var(--text-muted)]">لا يوجد إجراء متاح قبل وجود نتيجة.</span>
+                          )}
+                        </div>
+                      </footer>
                     </div>
                   )}
-                </div>
+                </section>
               </div>
             </div>
           ) : (
-            <AsyncState state="empty" title="لم يتم اختيار طلب" message="اختر طلباً من القائمة لعرض تفاصيل النتائج." className="min-h-72" />
+            <AsyncState
+              state="empty"
+              title="لم يتم اختيار طلب"
+              message="اختر طلباً من القائمة لعرض تفاصيل النتائج."
+              className="min-h-72"
+            />
           )}
         </section>
       </div>

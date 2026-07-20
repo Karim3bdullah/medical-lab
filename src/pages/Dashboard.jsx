@@ -6,7 +6,6 @@ import {
   CartesianGrid,
   Line,
   LineChart,
-  ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
@@ -15,6 +14,7 @@ import { useLab } from '../context/LabContext';
 import API from '../services/api';
 import PageHeader from '../components/PageHeader';
 import LoadingSpinner, { AsyncState } from '../components/LoadingSpinner';
+import ResponsiveChart from '../components/ResponsiveChart';
 
 const ANALYTICS_RESOURCES = [
   { key: 'patients', url: '/analytics/patients' },
@@ -421,9 +421,9 @@ const Dashboard = () => {
                 message="يعرض الرسم القيم الحقيقية فقط، ولن يتم إنشاء بيانات بديلة."
               />
             ) : (
-              <div className="h-72 w-full" role="img" aria-label="رسم اتجاه الإيرادات المحصلة">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={trendData} margin={{ top: 8, right: 8, left: 8, bottom: 8 }}>
+              <ResponsiveChart className="h-72 w-full" ariaLabel="رسم اتجاه الإيرادات المحصلة">
+                {({ width, height }) => (
+                  <LineChart width={width} height={height} data={trendData} margin={{ top: 8, right: 8, left: 8, bottom: 8 }}>
                     <CartesianGrid stroke="var(--border-default)" vertical={false} strokeDasharray="3 3" />
                     <XAxis dataKey="period" tick={{ fill: 'var(--text-muted)', fontSize: 10 }} />
                     <YAxis tick={{ fill: 'var(--text-muted)', fontSize: 10 }} width={54} />
@@ -438,8 +438,8 @@ const Dashboard = () => {
                     />
                     <Line type="monotone" dataKey="revenue" stroke="var(--brand-primary)" strokeWidth={3} dot={{ r: 3 }} activeDot={{ r: 5 }} />
                   </LineChart>
-                </ResponsiveContainer>
-              </div>
+                )}
+              </ResponsiveChart>
             )}
           </article>
         </ResourceState>
@@ -457,9 +457,9 @@ const Dashboard = () => {
             {testsData.length === 0 || !hasTestValues ? (
               <AsyncState state="empty" compact icon="biotech" title="لا توجد فحوصات في الفترة" />
             ) : (
-              <div className="h-72 w-full" role="img" aria-label="رسم أكثر الفحوصات طلباً">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={testsData} layout="vertical" margin={{ top: 4, right: 8, left: 18, bottom: 4 }}>
+              <ResponsiveChart className="h-72 w-full" ariaLabel="رسم أكثر الفحوصات طلباً">
+                {({ width, height }) => (
+                  <BarChart width={width} height={height} data={testsData} layout="vertical" margin={{ top: 4, right: 8, left: 18, bottom: 4 }}>
                     <CartesianGrid stroke="var(--border-default)" horizontal={false} strokeDasharray="3 3" />
                     <XAxis type="number" tick={{ fill: 'var(--text-muted)', fontSize: 10 }} />
                     <YAxis type="category" dataKey="code" width={66} tick={{ fill: 'var(--text-secondary)', fontSize: 10 }} />
@@ -475,8 +475,8 @@ const Dashboard = () => {
                     />
                     <Bar dataKey="count" fill="var(--brand-primary)" radius={[8, 0, 0, 8]} />
                   </BarChart>
-                </ResponsiveContainer>
-              </div>
+                )}
+              </ResponsiveChart>
             )}
           </article>
         </ResourceState>

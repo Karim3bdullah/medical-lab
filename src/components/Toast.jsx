@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 
 // ============================================================================
@@ -58,7 +58,7 @@ const ToastContainer = ({ toasts, removeToast }) => {
   if (toasts.length === 0) return null;
 
   return createPortal(
-    <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[9999] flex flex-col gap-3 w-[90%] max-w-md pointer-events-none">
+    <div className="ui-toast-container" aria-label="التنبيهات">
       {toasts.map((toast) => (
         <ToastItem
           key={toast.id}
@@ -78,7 +78,6 @@ const ToastContainer = ({ toasts, removeToast }) => {
 const ToastItem = ({ toast, onClose }) => {
   const { message, type } = toast;
 
-  // أيقونة حسب النوع
   const getIcon = () => {
     switch (type) {
       case 'success':
@@ -93,81 +92,44 @@ const ToastItem = ({ toast, onClose }) => {
     }
   };
 
-  // ألوان حسب النوع
-  const getColors = () => {
+  const getToneClass = () => {
     switch (type) {
       case 'success':
-        return {
-          bg: 'bg-emerald-50 dark:bg-emerald-950/80',
-          border: 'border-emerald-200 dark:border-emerald-800',
-          text: 'text-emerald-800 dark:text-emerald-200',
-          icon: 'text-emerald-500 dark:text-emerald-400',
-        };
+        return 'ui-toast-success';
       case 'error':
-        return {
-          bg: 'bg-red-50 dark:bg-red-950/80',
-          border: 'border-red-200 dark:border-red-800',
-          text: 'text-red-800 dark:text-red-200',
-          icon: 'text-red-500 dark:text-red-400',
-        };
+        return 'ui-toast-error';
       case 'warning':
-        return {
-          bg: 'bg-amber-50 dark:bg-amber-950/80',
-          border: 'border-amber-200 dark:border-amber-800',
-          text: 'text-amber-800 dark:text-amber-200',
-          icon: 'text-amber-500 dark:text-amber-400',
-        };
+        return 'ui-toast-warning';
       case 'info':
       default:
-        return {
-          bg: 'bg-blue-50 dark:bg-blue-950/80',
-          border: 'border-blue-200 dark:border-blue-800',
-          text: 'text-blue-800 dark:text-blue-200',
-          icon: 'text-blue-500 dark:text-blue-400',
-        };
+        return 'ui-toast-info';
     }
   };
 
-  const colors = getColors();
+  const isError = type === 'error';
 
   return (
     <div
-      className={`
-        pointer-events-auto w-full
-        flex items-center gap-3
-        px-4 py-3 md:px-5 md:py-4
-        rounded-2xl
-        border shadow-lg
-        ${colors.bg} ${colors.border} ${colors.text}
-        animate-slide-in-bottom
-        transition-all duration-300
-        hover:shadow-xl
-        text-sm md:text-base font-bold
-      `}
-      role="alert"
+      className={`ui-toast-item ${getToneClass()} animate-slide-in-bottom`}
+      role={isError ? 'alert' : 'status'}
+      aria-live={isError ? 'assertive' : 'polite'}
+      aria-atomic="true"
     >
-      {/* أيقونة */}
-      <span
-        className={`
-          material-symbols-outlined text-2xl md:text-3xl shrink-0
-          ${colors.icon}
-        `}
-      >
+      <span className="ui-toast-icon material-symbols-outlined" aria-hidden="true">
         {getIcon()}
       </span>
 
-      {/* الرسالة */}
-      <p className="flex-1 text-right font-mixed leading-relaxed">
+      <p className="ui-toast-message font-mixed">
         {message}
       </p>
 
-      {/* زر الإغلاق */}
       <button
+        type="button"
         onClick={onClose}
-        className="shrink-0 p-1 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+        className="ui-toast-close"
         aria-label="إغلاق التنبيه"
       >
-        <span className="material-symbols-outlined text-base opacity-60">
+        <span className="material-symbols-outlined" aria-hidden="true">
           close
         </span>
       </button>
@@ -179,7 +141,6 @@ const ToastItem = ({ toast, onClose }) => {
 // 🍞 Hooks و Functions مساعدة
 // ============================================================================
 
-// Hook للاستخدام في أي Component
 export const useToastSystem = () => {
   const { showToast } = useToast();
 
@@ -203,7 +164,6 @@ export const initToast = (toastFn) => {
   globalToast = toastFn;
 };
 
-// دوال عامة للاستخدام في أي مكان (حتى خارج الـ React Components)
 export const toast = {
   success: (message, duration) => {
     if (globalToast) globalToast(message, 'success', duration);
